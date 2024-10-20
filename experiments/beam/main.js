@@ -154,7 +154,7 @@ class Beam {
 		}
 		portions.push(0);
 		portions.push(this.length);
-		return [...new Set(portions)].sort();
+		return [...new Set(portions)].sort((a, b) => a - b);
 	}
 
 	maxPortionFor(x) {
@@ -320,7 +320,7 @@ class Beam {
 			if (portion !== 0) pointsToDraw.push(portion - 0.0001);
 			if (portion !== this.length) pointsToDraw.push(portion + 0.0001);
 		}
-		pointsToDraw.sort();
+		pointsToDraw.sort((a, b) => a - b);
 
 		function drawGraph(fn, topMargin, xUnit, yUnit) {
 			const leftMargin = beamLeft;

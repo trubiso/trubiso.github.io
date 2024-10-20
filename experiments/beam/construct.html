@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Constructor de vigas</title>
+</head>
+<body>
+	<h1>Constructor de vigas</h1>
+	<p><i>Precaución: los decimales deben ir separados por punto, no por coma (e.g. 2.5, no 2,5).</i></p>
+	<p><i>Para introducir una fuerza puntual (N), simplemente haz que su inicio sea igual que su fin. Para introducir una fuerza continua (N/m), introduce su inicio y su fin de forma normal.</i></p>
+	<form id="construct-form">
+		<fieldset>
+			<legend><b>Datos básicos</b></legend>
+			<div>
+				<label for="title">Título: </label>
+				<input type="text" name="title" id="title" placeholder="Mi maravillosa viga" required>
+			</div>
+			<div>
+				<label for="length">Longitud: </label>
+				<input type="number" name="length" id="length" min="0" step="any" value="10" required>
+			</div>
+			<div>
+				<label>Tipo de viga: </label>
+				<input type="radio" name="type" id="type-supported" value="supported" required>
+				<label for="type-supported">Apoyada</label>
+				<input type="radio" name="type" id="type-embedded" value="embedded" required>
+				<label for="type-embedded">Empotrada</label>
+			</div>
+		</fieldset>
+		<fieldset>
+			<legend><b>Fuerzas <button type="button" onclick="addForce()">+</button></b></legend>
+			<div id="force-container"></div>
+			<p id="force-container-placeholder"><i>No has añadido ninguna fuerza a esta viga. Para añadir una fuerza, haz clic en el botón + ubicado a la derecha del título "Fuerzas".</i></p>
+		</fieldset>
+		<button type="submit">Crear</button>
+	</form>
+	<script>
+		let forceContainerPlaceholder = document.getElementById("force-container-placeholder").cloneNode(true);
+		let forceCounter = 0;
+		function removeForce(button) {
+			const n = parseInt(button.parentElement.parentElement.id.slice('force'.length));
+			const forceContainer = document.getElementById("force-container");
+			for (const child of forceContainer.children) {
+				if (child.tagName.toLowerCase() !== "fieldset") continue;
+				const childIndex = parseInt(child.id.slice('force'.length));
+				if (childIndex === n) {
+					child.remove();
+					break;
+				}
+			}
+
+			for (const child of forceContainer.children) {
+				if (child.tagName.toLowerCase() !== "fieldset") continue;
+				const childIndex = parseInt(child.id.slice('force'.length));
+				if (childIndex >= n) {
+					const forceId = `force${childIndex - 1}`;
+					child.id = forceId;
+					const legend = child.children.item(0);
+					console.log(childIndex);
+					legend.innerText = `Fuerza nº${childIndex} `;
+					const removeButton = document.createElement("button");
+					removeButton.type = "button";
+					removeButton.innerText = "X";
+					removeButton.onclick = () => removeForce(removeButton);
+					legend.appendChild(removeButton);
+					const magnitudeDiv = child.children.item(1);
+					magnitudeDiv.children.item(1).name = `${forceId}-magnitude`;
+					magnitudeDiv.children.item(1).id = `${forceId}-magnitude`;
+					const positionDiv = child.children.item(2);
+					positionDiv.children.item(1).name = `${forceId}-beginning`;
+					positionDiv.children.item(1).id = `${forceId}-beginning`;
+					positionDiv.children.item(3).name = `${forceId}-end`;
+					positionDiv.children.item(3).id = `${forceId}-end`;
+				}
+			}
+			--forceCounter;
+			if (forceCounter === 0) {
+				forceContainer.appendChild(forceContainerPlaceholder.cloneNode(true));
+			}
+		}
+
+		function addForce() {
+			if (document.getElementById("force-container-placeholder")) {
+				document.getElementById("force-container-placeholder").remove();
+			}
+			const forceContainer = document.getElementById("force-container");
+			const fieldSet = document.createElement("fieldset");
+			fieldSet.id = `force${forceCounter}`;
+
+			const legend = document.createElement("legend");
+			legend.innerText = `Fuerza nº${forceCounter + 1} `;
+			const removeButton = document.createElement("button");
+			removeButton.type = "button";
+			removeButton.innerText = "X";
+			removeButton.onclick = () => removeForce(removeButton);
+			legend.appendChild(removeButton);
+			fieldSet.appendChild(legend);
+
+			const magnitudeDiv = document.createElement("div");
+			magnitudeDiv.innerHTML = `
+				<label>Magnitud: </label>
+				<input type="number" name="force${forceCounter}-magnitude" id="force${forceCounter}-magnitude" step="any" required>
+			`;
+			fieldSet.appendChild(magnitudeDiv);
+
+			const positionDiv = document.createElement("div");
+			positionDiv.innerHTML = `
+				<label>Inicio: </label>
+				<input type="number" name="force${forceCounter}-beginning" id="force${forceCounter}-beginning" step="any" required>
+				<label>Fin: </label>
+				<input type="number" name="force${forceCounter}-end" id="force${forceCounter}-end" step="any" required>
+			`;
+			fieldSet.appendChild(positionDiv);
+
+			forceContainer.appendChild(fieldSet);
+			++forceCounter;
+		}
+
+		const form = document.getElementById("construct-form");
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+			processForm();
+			return false;
+		});
+
+		function processForm() {
+			const formData = new FormData(form);
+			let code = `${formData.get("length")}${formData.get("type") === "supported" ? "S" : "W"}${forceCounter}`;
+			for (let i = 0; i < forceCounter; ++i) {
+				const magnitude = formData.get(`force${i}-magnitude`);
+				const beginning = formData.get(`force${i}-beginning`);
+				const end = formData.get(`force${i}-end`);
+				if (beginning === end) {
+					code += `;${magnitude}D${beginning}`;
+				} else {
+					code += `;${magnitude}C${beginning},${end}`;
+				}
+			}
+			code += `;${btoa(formData.get("title"))}`;
+			location.href = `./solution.html?code=${code}`;
+		}
+	</script>
+</body>
+</html>

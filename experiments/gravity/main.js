@@ -4,7 +4,7 @@ import Vector2 from '../lib/vector2.js';
 import { PhysicsObject } from './physicsObject.js';
 import { PhysicsSystem } from './physicsSystem.js';
 
-let zoom = 0.5;
+let zoom = 1;
 let gridZoom = zoom;
 
 export function main() {
@@ -48,7 +48,7 @@ export function main() {
 		new PhysicsObject(100, 1, new Vector2(-10, -8), new Vector2(0, 1), "blue"),
 	);
 
-	const system = mutualOrbitSystem;
+	const system = PhysicsSystem.random(screenSize, zoom);
 
 	let previousTime = performance.now();
 	function loop(time) {

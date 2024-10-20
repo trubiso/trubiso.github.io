@@ -1,3 +1,4 @@
+import { randomColor } from "../lib/random.js";
 import Vector2 from "../lib/vector2.js";
 
 /** The gravitational constant G */

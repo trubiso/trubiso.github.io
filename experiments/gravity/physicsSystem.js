@@ -1,5 +1,6 @@
 import { screenToWorld, worldToScreen, zoomFactor } from "../lib/coords.js";
-import { numberToHex } from "../lib/util.js";
+import { random, randomColor, randomPosition } from "../lib/random.js";
+import { constructArray, numberToHex } from "../lib/util.js";
 import Vector2 from "../lib/vector2.js";
 import { PhysicsObject } from "./physicsObject.js";
 
@@ -12,8 +13,8 @@ export class PhysicsSystem {
 		this.objects = objects;
 	}
 
-	static random(n = 4) {
-		return new PhysicsObject(...constructArray(n, () => new PhysicsObject(random(1, 250), random(0.2, 2), randomPosition(screenSize, zoom), Vector2.random(-3, 3), randomColor())));
+	static random(screenSize, zoom, n = 4) {
+		return new PhysicsSystem(...constructArray(n, () => new PhysicsObject(random(1, 250), random(0.2, 2), randomPosition(screenSize, zoom), Vector2.random(-3, 3), randomColor())));
 	}
 
 	// Properties

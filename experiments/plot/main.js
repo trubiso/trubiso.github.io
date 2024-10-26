@@ -58,9 +58,7 @@ export function main() {
 		const lineSize = zoomFactor(zoom * correctionFactor);
 		const minCoords = Vector2.zero;
 		const displacement = worldToScreen().mod(lineSize);
-		const centerCoords = [worldToScreen().x % lineSize, worldToScreen().y % lineSize];
 		const maxCoords = canvasSize;
-		console.log(minCoords, centerCoords, maxCoords);
 
 		ctx.beginPath();
 		for (let x = minCoords.x + displacement.x; x <= maxCoords.x; x += lineSize) {
@@ -96,6 +94,25 @@ export function main() {
 		// TODO: always start from the center for consistency
 		for (let x = minX + dt; x < maxX + dt; x += dt) {
 			const y = f(x);
+			const screenPos = worldToScreen(new Vector2(x, y));
+			ctx.lineTo(screenPos.x, screenPos.y);
+		}
+		ctx.stroke();
+		ctx.closePath();
+	}
+
+	function plotInverse(color, f) {
+		const minY = screenToWorld(canvasSize).y;
+		const maxY = screenToWorld(Vector2.zero).y;
+		const dt = (maxY - minY) * pixelsPerUnit / canvas.height / 100;
+		ctx.strokeStyle = color;
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		const initial = worldToScreen(new Vector2(f(minY), minY));
+		ctx.moveTo(initial.x, initial.y);
+		// TODO: always start from the center for consistency
+		for (let y = minY + dt; y < maxY + dt; y += dt) {
+			const x = f(y);
 			const screenPos = worldToScreen(new Vector2(x, y));
 			ctx.lineTo(screenPos.x, screenPos.y);
 		}
@@ -211,7 +228,6 @@ export function main() {
 		}
 	});
 
-	console.log("hi");
 	for (const prop of Object.getOwnPropertyNames(Math)) window[prop] = Math[prop];
 
 	redrawCanvas();

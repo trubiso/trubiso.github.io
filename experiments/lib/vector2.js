@@ -66,6 +66,10 @@ export default class Vector2 {
 		return new Vector2(-this.x, -this.y);
 	}
 
+	mod(k) {
+		return new Vector2(this.x % k, this.y % k);
+	}
+
 	// Magnitude
 	get length() {
 		return Math.sqrt(this.x * this.x + this.y * this.y);

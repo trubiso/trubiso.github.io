@@ -51,37 +51,28 @@ export function main() {
 	
 	function grid(ctx, canvasSize, zoom) {
 		ctx.lineWidth = 2;
-		const base = 2;
+		const base = 10;
 		const correctionFactor = Math.pow(base, -Math.round(Math.log(zoom) / Math.log(base)));
-	
-		const horizontalLines = Math.floor(canvasSize.x / zoomFactor(zoom * correctionFactor)) / 2 + centerDisplacement.x;
-		const verticalLines = Math.floor(canvasSize.y / zoomFactor(zoom * correctionFactor)) / 2 + centerDisplacement.y;
 		ctx.strokeStyle = "#00000055";
-	
-		// TODO: draw horizontal and vertical lines
-		// for (let i = 1; i <= horizontalLines; ++i) {
-		// 	let x1 = worldToScreen(new Vector2(+i * correctionFactor, 0)).x;
-		// 	let x2 = worldToScreen(new Vector2(-i * correctionFactor, 0)).x;
-		// 	ctx.beginPath();
-		// 	ctx.moveTo(x1, 0);
-		// 	ctx.lineTo(x1, canvasSize.y);
-		// 	ctx.moveTo(x2, 0);
-		// 	ctx.lineTo(x2, canvasSize.y);
-		// 	ctx.stroke();
-		// 	ctx.closePath();
-		// }
 
-		// for (let i = 1; i <= verticalLines; ++i) {
-		// 	let y1 = worldToScreen(new Vector2(0, +i * correctionFactor)).y;
-		// 	let y2 = worldToScreen(new Vector2(0, -i * correctionFactor)).y;
-		// 	ctx.beginPath();
-		// 	ctx.moveTo(0, y1);
-		// 	ctx.lineTo(canvasSize.x, y1);
-		// 	ctx.moveTo(0, y2);
-		// 	ctx.lineTo(canvasSize.x, y2);
-		// 	ctx.stroke();
-		// 	ctx.closePath();
-		// }
+		const lineSize = zoomFactor(zoom * correctionFactor);
+		const minCoords = Vector2.zero;
+		const displacement = worldToScreen().mod(lineSize);
+		const centerCoords = [worldToScreen().x % lineSize, worldToScreen().y % lineSize];
+		const maxCoords = canvasSize;
+		console.log(minCoords, centerCoords, maxCoords);
+
+		ctx.beginPath();
+		for (let x = minCoords.x + displacement.x; x <= maxCoords.x; x += lineSize) {
+			ctx.moveTo(x, 0);
+			ctx.lineTo(x, canvasSize.y);
+		}
+		for (let y = minCoords.y + displacement.y; y <= maxCoords.y; y += lineSize) {
+			ctx.moveTo(0, y);
+			ctx.lineTo(canvasSize.x, y);
+		}
+		ctx.stroke();
+		ctx.closePath();
 		
 		ctx.strokeStyle = "#000000bb";
 		ctx.beginPath();
@@ -187,6 +178,7 @@ export function main() {
 			parseInt(e.clientY - canvas.offsetTop),
 		);
 		isMouseClicked = true;
+		canvas.style.cursor = "grab";
 	}
 	canvas.onmouseup = (e) => {
 		mousePosition = new Vector2(
@@ -194,6 +186,7 @@ export function main() {
 			parseInt(e.clientY - canvas.offsetTop),
 		);
 		isMouseClicked = false;
+		canvas.style.cursor = "default";
 	}
 	canvas.onmousemove = (e) => {
 		if (!isMouseClicked) return;

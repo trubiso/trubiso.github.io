@@ -1,3 +1,7 @@
+export function windowSize() {
+	return [window.innerWidth, window.innerHeight];
+}
+
 export function createCanvas(width = -1, height = -1, addToDocument = true) {
 	const canvas = document.createElement("canvas");
 	canvas.width = width === -1 ? window.innerWidth : width;

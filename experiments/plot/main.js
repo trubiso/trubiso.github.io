@@ -34,7 +34,7 @@ export function main() {
 	let centerDisplacement = Vector2.zero;
 	let zoom = 1;
 	const zoomDelta = 1.1;
-	const movePositionDelta = 0.01;
+	const movePositionDelta = 10;
 	const zoomPositionDelta = 0.001;
 
 	function worldToScreen(coordinates = Vector2.zero) {
@@ -211,7 +211,8 @@ export function main() {
 			parseInt(e.clientX - canvas.offsetLeft),
 			parseInt(e.clientY - canvas.offsetTop),
 		);
-		const positionDelta = currentPosition.sub(mousePosition).flipY().div(zoom);
+		const maxSize = Math.max(canvasSize.x, canvasSize.y);
+		const positionDelta = currentPosition.sub(mousePosition).flipY().div(zoom).div(maxSize);
 		positionDelta.mulAssign(movePositionDelta);
 		centerDisplacement.addAssign(positionDelta);
 		mousePosition = currentPosition;

@@ -1,0 +1,10 @@
+main {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+article {
+	max-width: 1024px;
+	text-align: justify;
+}

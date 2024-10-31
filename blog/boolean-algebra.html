@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Boolean algebra</title>
+	<script src="mathjaxConfig.js" defer></script>
+	<script type="text/javascript" id="MathJax-script" defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<main>
+		<article>
+			<h1>Rediscovering boolean algebra</h1>
+			<section>
+				<p>
+					(Introduction)
+					I wanted to find a way to get an output out of a logical circuit by merely plugging in values into a mathematical formula.
+				</p>
+			</section>
+			<section>
+				<h2>First steps</h2>
+				<p>
+					First of all, I denoted all of the outputs of gates or functions with Latin letters and all of the inputs to gates and functions with Greek letters.
+					This is merely a convention to follow.
+					Inputs to functions $\alpha, \beta, \dots$ should be either 0 or 1, and the outputs $a, b, \dots$ should also be either 0 or 1.
+				</p>
+				<p>
+					We will denote the AND gate as $\wedge$, the OR gate as $\vee$, the XOR gate as $\oplus$ and the NEG gate as $\neg$.
+				</p>
+				<h3>Defining the gates</h3>
+				<p>
+					To begin, I tried to define the basic NOT, AND and OR gates.
+					The NOT gate can be succintly expressed as $\neg\kappa = 1 - \kappa$ (since $\kappa$ will only ever be 0 or 1), and the AND gate already comes built into algebra in the form of multiplication: $\alpha \wedge \beta = \alpha\beta$, since our values are 0 and 1, so the only way for this function to output 1 is if both values are 1.
+					Note that, since the AND gate is multiplication, $\alpha^n = \alpha\wedge\alpha\wedge\dots\wedge\alpha = \alpha \forall n \in \mathbb{Z}^+$, that is, any non-zero exponents can be discarded as long as the value inside is a bounded boolean (i.e. between 0 and 1).
+				</p>
+				<p>
+					The OR gate was way harder. I tried to use $\alpha \vee \beta = \alpha + \beta$ at first, which works, but it came with the problem that $1 \vee 1 = 2$ under this definition, which was nonsensical.
+					So, to solve it, at first I came up with the absolutely absurd $\frac{2(\alpha+\beta)}{\alpha+\beta+\alpha\beta+1}$, which technically works, but is extremely complex for a function as simple as OR.
+					Finally, I just noticed that we could subtract 1 whenever both outputs were 1 to avoid overflow, i.e. we could set $\alpha \vee \beta = \alpha + \beta - \alpha\beta$.
+				</p>
+				<p>
+					Moving on to the XOR gate, we can apply two types of reasoning to achieve the same formula:
+					<ul>
+						<li>
+							The XOR gate is only 1 whenever the inputs are different, i.e. when $\alpha - \beta \neq 0$.
+							Since $\alpha - \beta$ can only be 1 or -1 when $\alpha \neq \beta$, we can define XOR as $\alpha \oplus \beta = (\alpha - \beta)^2$ (it is possible to use the absolute value function instead of squaring, but squaring will lead us to better simplification).
+							We can expand this form: $(\alpha - \beta)^2 = \alpha^2 + \beta^2 - 2\alpha\beta = \alpha + \beta - 2\alpha\beta$.
+						</li>
+						<li>
+							We can follow the logic we followed with OR by keeping XOR's truth table in mind, and we can derive that the XOR gate is nothing but OR minus AND, i.e. $\alpha + \beta - \alpha\beta - \alpha\beta = \alpha + \beta - 2\alpha\beta$.
+						</li>
+					</ul>
+					In any case, the formula for XOR is $\alpha \oplus \beta = \alpha + \beta - 2\alpha\beta = (\alpha - \beta)^2$.
+					Note that, in the second definition, the square cannot be removed from the parenthesis, as $\alpha - \beta$ is not always a bounded boolean.
+				</p>
+				<p>
+					Finally, the negated gates NAND, NOR and XNOR can be achieved by applying NOT to these operations.
+					<ul>
+						$$\begin{aligned}
+							\neg(\alpha \wedge \beta) &= 1 - \alpha\beta\\
+							\neg(\alpha \vee   \beta) &= 1 - \alpha - \beta + \alpha\beta\\
+							\neg(\alpha \oplus \beta) &= 1 - \alpha - \beta + 2\alpha\beta = 1 - (\alpha - \beta)^2
+						\end{aligned}$$
+					</ul>
+				</p>
+				<p>
+					We can check whether De Morgan's laws apply to these definitions.
+					<ul>
+						$$\neg(\alpha \wedge \beta) = \neg\alpha \vee \neg\beta \implies 1 - \alpha\beta = 1 - \alpha + 1 - \beta - (1 - \alpha)(1 - \beta) = 2 - \alpha - \beta - (1 - \alpha - \beta + \alpha\beta) = 1 - \alpha\beta$$
+						$$\neg(\alpha \vee \beta) = \neg\alpha \wedge \neg\beta \implies 1 - \alpha - \beta + \alpha\beta = (1 - \alpha)(1 - \beta)$$
+					</ul>
+				</p>
+				<p>
+					TODO: prove associativity and commutativity (commutativity is due to symmetry)
+				</p>
+				<h3>Example circuit: Adder</h3>
+				<p>
+					Now, we could define simple circuits with these definitions. However, it isn't the simplest task, especially due to the $\alpha\beta$ terms in OR and XOR, and all of the alternating subtraction and addition.
+					We will try to build an adder which takes in three inputs: $\alpha, \beta$, the bits to sum, and $\gamma$, the carry in; and outputs $o$, the result, and $c$, the carry out.
+				</p>
+				<p>
+					The output is entirely determined by XOR gates: summing 2 bits is as simple as returning 0 if they are both 0, 1 if one of them is 1, and 0 if both are 0 (the output would be 10, which is represented as a 0 in the output and a 1 in the carry out).
+					As such, we can simply add the carry in bit to the result of summing the 2 input bits, which can be done likewise.
+					The resulting expression is $o = \alpha\oplus\beta\oplus\gamma$.
+				</p>
+				<p>
+					The carry out can be determined by AND and OR gates: the carry out will only be 1 if a pair of bits is on or if all three bits are on, which is already accounted for by the previous condition.
+					We can simply take each pair of bits, AND them, and OR the result with that of every other pair of bits.
+					The resulting expression is $c = (\alpha\wedge\beta) \vee (\alpha\wedge\gamma) \vee (\beta\wedge\gamma)$.
+				</p>
+				<p>
+					Finally, we can use our definitions of XOR, AND and OR to express this circuit as a pair of algebraic expressions.
+					In this first expansion, note that we are implicitly removing squares from bounded booleans to ease simplification.
+					$$\begin{aligned}
+						o &= \left((\alpha - \beta)^2 - \gamma\right)^2\\
+						&= \left(\alpha + \beta - 2\alpha\beta - \gamma\right)^2\\
+						&=\alpha + \alpha\beta - 2\alpha\beta - \alpha\gamma
+						 + \alpha\beta + \beta - 2\alpha\beta - \beta\gamma
+						 - 2\alpha\beta - 2\alpha\beta + 4\alpha\beta + 2\alpha\beta\gamma
+						 - \alpha\gamma - \beta\gamma + 2\alpha\beta\gamma + \gamma\\
+						&= \alpha + \beta + \gamma - 2\alpha\beta - 2\alpha\gamma - 2\beta\gamma + 4\alpha\beta\gamma
+					\end{aligned}$$
+					$$\begin{aligned}
+						c &= \alpha\beta \vee \alpha\gamma \vee \beta\gamma\\
+						&= (\alpha\beta + \alpha\gamma - 2\alpha\beta\gamma) \vee \beta\gamma\\
+						&= \alpha\beta + \alpha\gamma - 2\alpha\beta\gamma + \beta\gamma - (\alpha\beta + \alpha\gamma - 2\alpha\beta\gamma)\beta\gamma\\
+						&= \alpha\beta + \alpha\gamma + \beta\gamma - 2\alpha\beta\gamma
+					\end{aligned}$$
+					Now we have equations for $o$ and $c$ in terms of $\alpha,\beta,\gamma$, which is neat.
+				</p>
+				<p>
+					In fact, we can express any circuit with 3 inputs in the form $k_0 + k_1\alpha + k_2\beta + k_3\gamma + k_4\alpha\beta + k_5\alpha\gamma + k_6\beta\gamma + k_7\alpha\beta\gamma$, which means we only need the set of coefficients $\{k_0,k_1,k_2,k_3,k_4,k_5,k_6,k_7\}$ to uniquely determine a circuit with 3 inputs (where $k_i\in\mathbb{Z}$).
+				</p>
+				<p>
+					Generalizing, we need $2^n$ terms for a circuit with $n$ inputs, which we may denote $\{k_0, k_1, \dots, k_{n-1}\}$, where $k_i\in\mathbb{Z}$.
+					However, we could still simplify this by employing a powerful algebraic tool, reducing the possibilities for $k_i$ to merely 0 and 1.
+				</p>
+			</section>
+			<section>
+				<h2>Modulo 2</h2>
+				<p>
+					Remember how defining circuits with our earlier definitions was hard due to excess $\alpha\beta$ terms in OR and XOR and alternating subtraction and addition?
+					A consequence of working mod 2 is that every number above 1 can be reduced to a number between 0 and 1 by repeatedly subtracting 2 (or taking the remainder of the long division by 2).
+					This means that we can greatly simplify many things.
+				</p>
+				<p>
+					Subtraction and addition can be proven to be the same operation.
+					If we have the expression $\alpha - \beta$, where both are integers mod 2, $\alpha + \beta = \alpha - \beta \implies \alpha + 2\beta = \alpha$ which will always be true, for $2\beta$ is 0 mod 2. (TODO: more rigorous proof)
+				</p>
+				<p>
+					A side product of subtraction and addition being the same is that we can rewrite $\neg\kappa$ as $1 + \kappa$, and $\alpha\oplus\beta$ as $\alpha + \beta$.
+				</p>
+				<p>
+					The new definitions for operations mod 2 is:
+				</p>
+				<p>
+					This greatly simplifies our adder circuit to $o=\alpha+\beta+\gamma$ and $c=\alpha\beta+\alpha\gamma+\beta\gamma$. Isn't that cool?
+				</p>
+			</section>
+			<section>
+				<h2>8-bit adder</h2>
+				<p>
+					(TODO)
+					Represent 8-bit adder as system of equations where we map 16 inputs to 8 outputs (discard first carry in and last carry out).
+					Set desired outputs $o_0,o_1,\dots,o_7$; ANDing the original output functions with desired values.
+					Finally, AND all of them together, and the result is one huge equation, and we can prove its satisfiability and its simplification.
+				</p>
+			</section>
+			<section>
+				<h2>Filler</h2>
+				<p>Filler</p>
+				<p>Filler</p>
+				<p>Filler</p>
+				<p>Filler</p>
+				<p>Filler</p>
+				<p>Filler</p>
+				<p>Filler</p>
+			</section>
+		</article>
+	</main>
+</body>
+</html>

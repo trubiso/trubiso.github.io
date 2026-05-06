@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Piano</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/tone@latest/build/Tone.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+	<script src="piano/shapes.js"></script>
+	<script>
+		function help() {
+			alert("To play using a MIDI device, allow MIDI devices and choose your device from the dropdown.\nAlternatively, you may play by clicking on the notes or using the keyboard (FL Studio layout).\nThe notes played and any detected chord will be shown on screen.");
+		}
+	</script>
+	<link rel="stylesheet" href="piano/style.css" />
+</head>
+<body>
+	<div class="candidates">
+		<span id="main-candidate"></span>
+		<span id="secondary-candidates"></span>
+	</div>
+	<div class="settings">
+		<button onclick="help()">?</button>
+		<button onclick="Tone.start()">start audio</button>
+		<select name="device" id="device"></select>
+	</div>
+	<div id="piano"></div>
+	<div id="sheet-music"></div>
+	<script src="piano/display.js"></script>
+	<script src="piano/chords.js"></script>
+	<script src="piano/piano.js"></script>
+	<script src="piano/keyboard.js"></script>
+	<script src="piano/midi.js"></script>
+</body>
+</html>

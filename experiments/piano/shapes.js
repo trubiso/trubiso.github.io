@@ -616,6 +616,9 @@ const SHAPES_DEGREES = [
 
 	// b13, #11, #9, b9, 7
 	[["1", "3", "5", "7", "b9", "#9", "#11", "b13"], "maj7(b9, #9, #11, b13)"],
+
+	// #15 shenanigans
+	[["1", "3", "7", "9", "#11", "13", "#15"], "maj13#11#15"],
 ];
 
 const SHAPES = [];
@@ -624,6 +627,7 @@ const degreeMap = {
 	"1": 0,
 	"b2": 1,
 	"b9": 1,
+	"#15": 1,
 	"2": 2,
 	"9": 2,
 	"b3": 3,
@@ -677,6 +681,7 @@ function getDegreesAccordingToChord(notes, shape) {
 
 const degreeNameMap = {
 	"1":   ["C",   "Db",  "D",  "Eb",  "E",   "F",   "F#",  "G",  "Ab",  "A",  "Bb", "B"  ],
+	"#15": ["C#",  "D",   "D#", "E",   "E#",  "F#",  "F##", "G#", "A",   "A#", "B",  "B#" ],
 	"b2":  ["Db",  "Ebb", "Eb", "Fb",  "F",   "Gb",  "G",   "Ab", "Bbb", "Bb", "Cb", "C"  ],
 	"b9":  ["Db",  "Ebb", "Eb", "Fb",  "F",   "Gb",  "G",   "Ab", "Bbb", "Bb", "Cb", "C"  ],
 	"2":   ["D",   "Eb",  "E",  "F",   "F#",  "G",   "G#",  "A",  "Bb",  "B",  "C",  "C#" ],

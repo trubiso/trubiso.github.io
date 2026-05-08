@@ -192,7 +192,7 @@ function splitRequirement(requirement) {
 }
 
 function applyKnowledge(requirement, knowledge) {
-	if (typeof requirement.formula === "string") throw new Error("Somehow reached a proposition");
+	if (typeof requirement.formula === "string") return requirement;
 	switch (requirement.formula.type) {
 		case "not": return requirement; // wait for split
 		case "and": {
@@ -292,37 +292,84 @@ function requirementsEqual(a, b) {
 	return true;
 }
 
-function counterexampleSearch() {
-	let outerRequirement = {formula, value: false};
-	let requirements = [outerRequirement];
+function branches(requirement) {
+	if (typeof requirement.formula === "string") return null;
+	switch (requirement.formula.type) {
+		case "not": return null;
+		case "and":
+			if (requirement.value) return null;
+			return [
+				[
+					{formula: requirement.formula.lhs, value: false},
+					{formula: requirement.formula.rhs, value: false},
+				],
+				[
+					{formula: requirement.formula.lhs, value: false},
+					{formula: requirement.formula.rhs, value: true},
+				],
+				[
+					{formula: requirement.formula.lhs, value: true},
+					{formula: requirement.formula.rhs, value: false},
+				],
+			];
+		case "or":
+			if (!requirement.value) return null;
+			return [
+				[
+					{formula: requirement.formula.lhs, value: false},
+					{formula: requirement.formula.rhs, value: true},
+				],
+				[
+					{formula: requirement.formula.lhs, value: true},
+					{formula: requirement.formula.rhs, value: false},
+				],
+				[
+					{formula: requirement.formula.lhs, value: true},
+					{formula: requirement.formula.rhs, value: true},
+				],
+			];
+		case "then":
+			if (!requirement.value) return null;
+			return [
+				[
+					{formula: requirement.formula.lhs, value: false},
+					{formula: requirement.formula.rhs, value: false},
+				],
+				[
+					{formula: requirement.formula.lhs, value: false},
+					{formula: requirement.formula.rhs, value: true},
+				],
+				[
+					{formula: requirement.formula.lhs, value: true},
+					{formula: requirement.formula.rhs, value: true},
+				],
+			];
+	}
+}
+
+function search(requirements, knowledge, prefix = "") {
 	let oldRequirements = [];
 	let contradictionFound = false;
-
-	const knowledge = {};
-	for (const proposition of formulaPropositions(formula)) {
-		knowledge[proposition] = null;
-	}
-
 	let iteration = 1;
 	let output = document.getElementById("output");
-	output.textContent = "";
+
 	while (!requirementsEqual(oldRequirements, requirements)) {
-		output.textContent += `Iteration ${iteration++}:\n`;
-		output.textContent += `\tRequirements:\n`;
+		output.textContent += `${prefix}Iteration ${iteration++}:\n`;
+		output.textContent += `${prefix}\tRequirements:\n`;
 		output.textContent += requirements.length
-			? requirements.map(x => `\t\t* ${formulaString(x.formula)}: ${x.value}`).join("\n")
-			: "\t\t(none)";
-		output.textContent += `\n\tKnowledge:\n`;
-		output.textContent += Object.keys(knowledge).map(x => `\t\t* ${x}: ${knowledge[x] === null ? "?" : knowledge[x]}`).join("\n");
-		output.textContent += `\n`;
+			? requirements.map(x => `${prefix}\t\t* ${formulaString(x.formula)}: ${x.value}`).join("\n")
+			: `${prefix}\t\t(none)`;
+		output.textContent += `\n${prefix}\tKnowledge:\n`;
+		output.textContent += Object.keys(knowledge).map(x => `${prefix}\t\t* ${x}: ${knowledge[x] === null ? "?" : knowledge[x]}`).join("\n");
+		output.textContent += `\n${prefix}`;
 		if (contradictionFound) {
-			output.textContent += `\nContradiction found! No counterexample exists.\n`;
-			return;
+			output.textContent += `\n${prefix}Contradiction found! No counterexample exists.\n`;
+			return {type: "contradiction"};
 		}
 		if (!requirements.length && Object.keys(knowledge).every(x => knowledge[x] !== null)) {
-			output.textContent += "\nCounterexample found:\n";
-			output.textContent += Object.keys(knowledge).map(x => `\t* ${x}: ${knowledge[x]}`).join("\n");
-			return;
+			output.textContent += `\n${prefix}Counterexample found:\n`;
+			output.textContent += Object.keys(knowledge).map(x => `${prefix}\t* ${x}: ${knowledge[x]}`).join("\n");
+			return {type: "counterexample", knowledge};
 		}
 
 		oldRequirements = requirements;
@@ -331,7 +378,7 @@ function counterexampleSearch() {
 			if (valid === null) continue;
 			if (valid !== requirement.value) {
 				output.textContent += `\nContradiction found! No counterexample exists.\n`;
-				return;
+				return {type: "contradiction"};
 			}
 		}
 		requirements = requirements.flatMap(x => applyKnowledge(x, knowledge));
@@ -350,5 +397,49 @@ function counterexampleSearch() {
 		}
 		requirements = requirements.filter(x => typeof x.formula !== "string");
 	}
-	output.textContent += "\nStalled!\nThis may be because branching would be required to continue, but it is not implemented yet.";
+
+	if (!requirements.length) {
+		output.textContent += `\n${prefix}Stalled!\n${prefix}Not enough information.\n`;
+		return {type: "stalled"};
+	}
+
+	const b = branches(requirements[0]);
+	requirements = requirements.slice(1);
+	let branchNumber = 1;
+	for (const branch of b) {
+		output.textContent += `\n${prefix}Branch ${branchNumber++}:\n`;
+		const verdict = search([...requirements, ...branch], {...knowledge}, `${prefix}\t`);
+		if (verdict.type === "stalled") {
+			output.textContent += `\n${prefix}Branch stalled!\n`;
+			return {type: "stalled"};
+		} else if (verdict.type === "counterexample") {
+			output.textContent += `\n${prefix}Branch has a counterexample.\n`;
+			return {type: "counterexample", knowledge: verdict.knowledge}
+		}
+	}
+	output.textContent += `\n${prefix}Every branch has a contradiction, therefore this branch is a contradiction.`;
+	return {type: "contradiction"};
+}
+
+function counterexampleSearch() {
+	let outerRequirement = {formula, value: false};
+	let requirements = [outerRequirement];
+
+	const knowledge = {};
+	for (const proposition of formulaPropositions(formula)) {
+		knowledge[proposition] = null;
+	}
+
+	let output = document.getElementById("output");
+	output.textContent = "";
+
+	const verdict = search(requirements, knowledge);
+	switch (verdict.type) {
+		case "stalled": output.textContent += `\n\nVERDICT: stalled.`; return;
+		case "contradiction": output.textContent += `\n\nVERDICT: formula is valid (no counterexample).`; return;
+		case "counterexample":
+			output.textContent += `\n\nVERDICT: formula is not valid (counterexample found).\n`;
+			output.textContent += Object.keys(verdict.knowledge).map(x => `\t* ${x}: ${verdict.knowledge[x]}`).join("\n");
+			return;
+	}
 }

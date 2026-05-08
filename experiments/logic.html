@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Logic</title>
+	<script src="logic/index.js"></script>
+</head>
+<body>
+	<p>Only propositional logic is supported for now. Operators: ~ (not), & (and), | (or), -> (then).</p>
+	<div>
+		<label for="formula">Enter your formula:</label>
+		<input type="text" name="formula" id="formula" oninput="parseFormula()" />
+	</div>
+	<div>
+		<label for="parsed-formula">Parsed formula:</label>
+		<input type="text" name="parsed-formula" id="parsed-formula" disabled />
+		<span id="parse-errors"></span>
+	</div>
+	<p>Actions:</p>
+	<div>
+		<button onclick="listPropositions()">List propositions</button>
+		<button onclick="counterexampleSearch()">Counterexample search</button>
+	</div>
+	<pre id="output"></pre>
+
+	<script>
+		parseFormula();
+	</script>
+</body>
+</html>

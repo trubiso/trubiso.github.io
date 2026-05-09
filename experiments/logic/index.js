@@ -347,28 +347,33 @@ function branches(requirement) {
 	}
 }
 
-function search(requirements, knowledge, prefix = "") {
+function search(requirements, knowledge, verbose, prefix = "") {
 	let oldRequirements = [];
 	let contradictionFound = false;
 	let iteration = 1;
 	let output = document.getElementById("output");
 
 	while (!requirementsEqual(oldRequirements, requirements)) {
-		output.textContent += `${prefix}Iteration ${iteration++}:\n`;
-		output.textContent += `${prefix}\tRequirements:\n`;
-		output.textContent += requirements.length
-			? requirements.map(x => `${prefix}\t\t* ${formulaString(x.formula)}: ${x.value}`).join("\n")
-			: `${prefix}\t\t(none)`;
-		output.textContent += `\n${prefix}\tKnowledge:\n`;
-		output.textContent += Object.keys(knowledge).map(x => `${prefix}\t\t* ${x}: ${knowledge[x] === null ? "?" : knowledge[x]}`).join("\n");
-		output.textContent += `\n${prefix}`;
+		if (verbose) {
+			output.textContent += `${prefix}Iteration ${iteration++}:\n`;
+			output.textContent += `${prefix}\tRequirements:\n`;
+			output.textContent += requirements.length
+				? requirements.map(x => `${prefix}\t\t* ${formulaString(x.formula)}: ${x.value}`).join("\n")
+				: `${prefix}\t\t(none)`;
+			output.textContent += `\n${prefix}\tKnowledge:\n`;
+			output.textContent += Object.keys(knowledge).map(x => `${prefix}\t\t* ${x}: ${knowledge[x] === null ? "?" : knowledge[x]}`).join("\n");
+			output.textContent += '\n';
+		}
 		if (contradictionFound) {
-			output.textContent += `\n${prefix}Contradiction found! No counterexample exists.\n`;
+			if(verbose) output.textContent += `\n${prefix}Contradiction found! No counterexample exists.\n`;
 			return {type: "contradiction"};
 		}
 		if (!requirements.length && Object.keys(knowledge).every(x => knowledge[x] !== null)) {
-			output.textContent += `\n${prefix}Counterexample found:\n`;
-			output.textContent += Object.keys(knowledge).map(x => `${prefix}\t* ${x}: ${knowledge[x]}`).join("\n");
+			if(verbose) {
+				output.textContent += `\n${prefix}Counterexample found:\n`;
+				output.textContent += Object.keys(knowledge).map(x => `${prefix}\t* ${x}: ${knowledge[x]}`).join("\n");
+				output.textContent += '\n';
+			}
 			return {type: "counterexample", knowledge};
 		}
 
@@ -377,7 +382,7 @@ function search(requirements, knowledge, prefix = "") {
 			const valid = evaluate(requirement.formula, knowledge);
 			if (valid === null) continue;
 			if (valid !== requirement.value) {
-				output.textContent += `\nContradiction found! No counterexample exists.\n`;
+				if(verbose) output.textContent += `\n${prefix}Contradiction found! No counterexample exists.\n`;
 				return {type: "contradiction"};
 			}
 		}
@@ -399,7 +404,7 @@ function search(requirements, knowledge, prefix = "") {
 	}
 
 	if (!requirements.length) {
-		output.textContent += `\n${prefix}Stalled!\n${prefix}Not enough information.\n`;
+		if(verbose) output.textContent += `\n${prefix}Stalled!\n${prefix}Not enough information.\n`;
 		return {type: "stalled"};
 	}
 
@@ -407,21 +412,21 @@ function search(requirements, knowledge, prefix = "") {
 	requirements = requirements.slice(1);
 	let branchNumber = 1;
 	for (const branch of b) {
-		output.textContent += `\n${prefix}Branch ${branchNumber++}:\n`;
-		const verdict = search([...requirements, ...branch], {...knowledge}, `${prefix}\t`);
+		if(verbose) output.textContent += `\n${prefix}Branch ${branchNumber++}:\n`;
+		const verdict = search([...requirements, ...branch], {...knowledge}, verbose, `${prefix}\t`);
 		if (verdict.type === "stalled") {
-			output.textContent += `\n${prefix}Branch stalled!\n`;
+			if(verbose) output.textContent += `\n${prefix}Branch stalled!\n`;
 			return {type: "stalled"};
 		} else if (verdict.type === "counterexample") {
-			output.textContent += `\n${prefix}Branch has a counterexample.\n`;
+			if(verbose) output.textContent += `\n${prefix}Branch has a counterexample.\n`;
 			return {type: "counterexample", knowledge: verdict.knowledge}
 		}
 	}
-	output.textContent += `\n${prefix}Every branch has a contradiction, therefore this branch is a contradiction.`;
+	if(verbose) output.textContent += `\n${prefix}Every branch has a contradiction, therefore this branch is a contradiction.\n`;
 	return {type: "contradiction"};
 }
 
-function counterexampleSearch() {
+function counterexampleSearch(verbose = false) {
 	let outerRequirement = {formula, value: false};
 	let requirements = [outerRequirement];
 
@@ -433,12 +438,13 @@ function counterexampleSearch() {
 	let output = document.getElementById("output");
 	output.textContent = "";
 
-	const verdict = search(requirements, knowledge);
+	const verdict = search(requirements, knowledge, verbose);
+	if(verbose) output.textContent += `\n================\n\n`;
 	switch (verdict.type) {
-		case "stalled": output.textContent += `\n\nVERDICT: stalled.`; return;
-		case "contradiction": output.textContent += `\n\nVERDICT: formula is valid (no counterexample).`; return;
+		case "stalled": output.textContent += `VERDICT: stalled.`; return;
+		case "contradiction": output.textContent += `VERDICT: formula is valid (no counterexample).`; return;
 		case "counterexample":
-			output.textContent += `\n\nVERDICT: formula is not valid (counterexample found).\n`;
+			output.textContent += `VERDICT: formula is not valid (counterexample found).\n`;
 			output.textContent += Object.keys(verdict.knowledge).map(x => `\t* ${x}: ${verdict.knowledge[x]}`).join("\n");
 			return;
 	}

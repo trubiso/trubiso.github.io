@@ -95,8 +95,27 @@ function parseThen(formula) {
 	return [newFormula, lhs];
 }
 
+function parseBiconditional(formula) {
+	let [newFormula, lhs] = parseThen(formula);
+	if (!lhs) return [newFormula, null];
+
+	while (newFormula.trim().startsWith("<->")) {
+		newFormula = removeFirst(newFormula, "<->");
+		const [newNewFormula, rhs] = parseThen(newFormula);
+		newFormula = newNewFormula;
+		if (!rhs) throw new Error("Expected proposition after '<->'");
+		lhs = {
+			type: "and",
+			lhs: {type: "then", lhs, rhs},
+			rhs: {type: "then", lhs: rhs, rhs: lhs},
+		};
+	}
+
+	return [newFormula, lhs];
+}
+
 function parse(formula) {
-	return parseThen(formula);
+	return parseBiconditional(formula);
 }
 
 let formula = "nothing";

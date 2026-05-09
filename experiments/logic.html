@@ -7,7 +7,7 @@
 	<script src="logic/index.js"></script>
 </head>
 <body>
-	<p>Only propositional logic is supported for now. Operators: ~ (not), & (and), | (or), -> (then).</p>
+	<p>Only propositional logic is supported for now. Operators: <code>~</code> (not), <code>&</code> (and), <code>|</code> (or), <code>-&gt;</code> (then), and <code>&lt;-&gt;</code> (biconditional, implemented as an alias for <code>(a -> b) & (b -> a)</code>).</p>
 	<div>
 		<label for="formula">Enter your formula:</label>
 		<input type="text" name="formula" id="formula" oninput="parseFormula()" />

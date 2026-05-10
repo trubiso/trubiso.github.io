@@ -6,10 +6,8 @@ const SHAPES_DEGREES = [
 	[["1", "4"], "sus4"],
 	[["1", "b3", "b5"], "dim"],
 	[["1", "3", "#5"], "aug"],
- 
-	// intervals
-	[["1", "b5"], " tritone"],
 	[["1", "5"], "5"],
+	[["1", "b5"], " tritone"],
 
 	// b7
 	[["1", "5", "b7"], "7(no3)"],
@@ -653,7 +651,7 @@ const degreeMap = {
 	"bb7": 9,
 	"b7": 10,
 	"7": 11,
-}
+};
 
 for (const shapeData of SHAPES_DEGREES) {
 	const [degreeShape, name] = shapeData;
@@ -713,4 +711,19 @@ const degreeNameMap = {
 	"bb7": ["Bbb", "Cbb", "Cb", "Dbb", "Db",  "Ebb", "Eb",  "Fb", "Gbb", "Gb", "Abb","Ab" ],
 	"b7":  ["Bb",  "Cb",  "C",  "Db",  "D",   "Eb",  "E",   "F",  "Gb",  "G",  "Ab", "A"  ],
 	"7":   ["B",   "C",   "C#", "D",   "D#",  "E",   "E#",  "F#", "G",   "G#", "A",  "A#" ],
-}
+};
+
+const intervalNames = [
+	[["1", "unison"], ["1", "octave"]],
+	[["b2", "minor 2nd"], ["b9", "minor 9th"]],
+	[["2", "major 2nd"]],
+	[["b3", "minor 3rd"]],
+	[["3", "major 3rd"]],
+	[["4", "perfect 4th"]],
+	[["b5", "diminished 5th"]],
+	[["5", "perfect 5th"]],
+	[["#5", "augmented 5th"]],
+	[["6", "major 6th"]],
+	[["b7", "minor 7th"]],
+	[["7", "major 7th"]],
+];

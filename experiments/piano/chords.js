@@ -13,6 +13,19 @@ function transformChord(chord, base) {
 const DEGREES = ["1", "b2", "2", "b3", "3", "4", "#4", "5", "b6", "6", "b7", "7"];
 
 function nameChord(chord, octaves) {
+	if (chord.length === 2) {
+		const [base, other] = transformChord(chord, chord[0]);
+		const alternative = octaves[1] > octaves[0];
+		const intervalData = intervalNames[other];
+		const [degree, name] = intervalData.length > 1
+			? intervalData[alternative ? 1 : 0]
+			: intervalData[0];
+		const chordDegrees = ["1", degree];
+		const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][base]);
+		const octavedChordDegreeNotes = chordDegreeNotes.map((x, i) => `${x}${octaves[i]}`);
+		return [[[`${NOTES_USER[chord[0]]} ${name}`]], octavedChordDegreeNotes];
+	}
+
 	const candidates = [];
 	for (const note of new Set(chord)) {
 		const transformed = transformChord(chord, note);

@@ -14,7 +14,7 @@ const DEGREES = ["1", "b2", "2", "b3", "3", "4", "#4", "5", "b6", "6", "b7", "7"
 
 function getChordCandidates(chord, octaves, onlyRooted = false) {
 	const candidates = [];
-	for (const note of onlyRooted ? [chord[0]] : new Set(chord)) {
+	for (const note of new Set(chord)) {
 		const transformed = transformChord(chord, note);
 		for (const [shape, name, forbid5, degrees, penalty] of SHAPES) {
 			if (forbid5 && transformed.includes(7)) continue;
@@ -27,7 +27,7 @@ function getChordCandidates(chord, octaves, onlyRooted = false) {
 			score += penalty;
 			const chordDegrees = getDegreesAccordingToChord(transformed, degrees);
 			const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][note]);
-			const chordName = chord[0] === note
+			const chordName = (chord[0] === note || onlyRooted)
 				? `${NOTES_USER[note]}${name}`
 				: `${NOTES_USER[note]}${name}/${chordDegreeNotes[0]}`;
 
@@ -62,14 +62,16 @@ function nameChord(chord, octaves) {
 
 	const candidates = getChordCandidates(chord, octaves);
 	if (nameUpperStructures && chord[1] !== chord[0]) {
-		const upperStructure = getChordCandidates(chord.slice(1), octaves.slice(1), true);
-		if (upperStructure.length) {
-			const name = `${upperStructure[0][0]}/${NOTES_USER[chord[0]]}`;
+		const upperStructures = getChordCandidates(chord.slice(1), octaves.slice(1), true);
+		
+		for (const upperStructure of upperStructures) {
+			if (upperStructure[0].startsWith(NOTES_USER[chord[0]])) continue;
+			const name = `${upperStructure[0]}/${NOTES_USER[chord[0]]}`;
 			if (!candidates.some(x => x[0] === name))
 				candidates.push([
 					name,
-					[`${NOTES_USER[chord[0]]}${octaves[0]}`,...upperStructure[0][1]],
-					upperStructure[0][2] + 0.5,
+					[`${NOTES_USER[chord[0]]}${octaves[0]}`,...upperStructure[1]],
+					upperStructure[2] + 0.5,
 				]);
 		}
 	}

@@ -28,6 +28,10 @@
 		<select name="device" id="device"></select>
 		<div class="gap"></div>
 		<div class="option">
+			<label for="include-polychords">include polychords</label>
+			<input type="checkbox" name="include-polychords" id="include-polychords" onchange="setIncludePolychords(this.checked);">
+		</div>
+		<div class="option">
 			<label for="include-rootless">include rootless voicings</label>
 			<input type="checkbox" name="include-rootless" id="include-rootless" onchange="setIncludeRootless(this.checked);">
 		</div>

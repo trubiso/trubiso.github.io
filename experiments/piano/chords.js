@@ -12,12 +12,13 @@ function transformChord(chord, base) {
 
 const DEGREES = ["1", "b2", "2", "b3", "3", "4", "#4", "5", "b6", "6", "b7", "7"];
 
-function getChordCandidates(chord, octaves, onlyRooted = false, rootless = false) {
+function getChordCandidates(chord, octaves, onlyRooted = false, rootless = false, require5 = false) {
 	const candidates = [];
 	const chordTones = new Set(chord);
 	for (const note of rootless ? NOTES.map((x, i) => i).filter(x => !chordTones.has(x)) : chordTones) {
 		const transformed = transformChord(chord, note);
 		for (const [rawShape, name, forbid5, rawDegrees, penalty] of SHAPES) {
+			if (require5 && !forbid5 && !transformed.includes(7)) continue;
 			const shape = rootless ? rawShape.filter(x => x !== 0) : rawShape;
 			const degrees = rootless ? rawDegrees.filter(x => x !== "1") : rawDegrees;
 			if (forbid5 && transformed.includes(7)) continue;
@@ -32,7 +33,7 @@ function getChordCandidates(chord, octaves, onlyRooted = false, rootless = false
 			const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][note]);
 			const chordName = ((chord[0] === note || onlyRooted || rootless)
 				? `${NOTES_USER[note]}${name}`
-				: `${NOTES_USER[note]}${name}/${chordDegreeNotes[0]}`)
+				: `${NOTES_USER[note]}${name}\u2060/\u2060${chordDegreeNotes[0]}`)
 				+ (rootless ? " (rootless)" : "");
 
 			const octavedChordDegreeNotes = chordDegreeNotes.map((x, i) => `${x}${octaves[i]}`);
@@ -46,6 +47,7 @@ function getChordCandidates(chord, octaves, onlyRooted = false, rootless = false
 
 let nameUpperStructures = document.getElementById("name-upper-structures").checked;
 let includeRootless = document.getElementById("include-rootless").checked;
+let includePolychords = document.getElementById("include-polychords").checked;
 
 function setNameUpperStructures(value) {
 	nameUpperStructures = value;
@@ -53,6 +55,10 @@ function setNameUpperStructures(value) {
 
 function setIncludeRootless(value) {
 	includeRootless = value;
+}
+
+function setIncludePolychords(value) {
+	includePolychords = value;
 }
 
 function nameChord(chord, octaves) {
@@ -80,13 +86,32 @@ function nameChord(chord, octaves) {
 		for (const upperStructure of upperStructures) {
 			if (upperStructure[0].startsWith(NOTES_USER[chord[0]])) continue;
 			// FIXME: sometimes this creates duplicates like F#/Bb vs F#/A#. we need a way to stop that
-			const name = `${upperStructure[0]}/${NOTES_USER[chord[0]]}`;
+			const name = `${upperStructure[0]}\u2060/\u2060${NOTES_USER[chord[0]]}`;
 			if (!candidates.some(x => x[0] === name))
 				candidates.push([
 					name,
 					[`${NOTES_USER[chord[0]]}${octaves[0]}`,...upperStructure[1]],
 					upperStructure[2],
 				]);
+		}
+	}
+	if (includePolychords && chord.length > 3) {
+		for (let i = 2; i < chord.length; ++i) {
+			const [lowerChord, lowerOctaves] = [chord.slice(0, i), octaves.slice(0, i)];
+			const [upperChord, upperOctaves] = [chord.slice(i), octaves.slice(i)];
+
+			const lowerCandidates = getChordCandidates(lowerChord, lowerOctaves, false, false, true);
+			const upperCandidates = getChordCandidates(upperChord, upperOctaves, false, false, true);
+			if (!lowerCandidates.length || !upperCandidates.length) continue;
+
+			for (const [lowName, lowOcdn, lowScore] of lowerCandidates) {
+				for (const [highName, highOcdn, highScore] of upperCandidates) {
+					const name = `${highName}\u2060|\u2060${lowName}`;
+					const ocdn = [...lowOcdn, ...highOcdn];
+					const score = lowScore + highScore;
+					candidates.push([name, ocdn, score]);
+				}
+			}
 		}
 	}
 	candidates.sort((a, b) => b[2] - a[2]);

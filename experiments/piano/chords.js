@@ -138,7 +138,10 @@ const synth = new Tone.Sampler({
 
 synth.context.lookAhead = 0.001;
 
+let sustain = false;
+
 let notes = new Set();
+let currentNotes = new Set();
 
 function updateCandidatesFromNotes() {
 	const noteArray = Array.from(notes.keys());
@@ -177,15 +180,35 @@ function updateCandidatesFromNotes() {
 }
 
 function play(noteName, velocity = 127) {
-	if (notes.has(noteName)) return;
+	if (currentNotes.has(noteName)) return;
+	currentNotes.add(noteName);
 	notes.add(noteName);
 	synth.triggerAttack(noteName, undefined, velocity / 127);
 	updateCandidatesFromNotes();
 }
 
 function stop(noteName) {
-	if (!notes.has(noteName)) return;
-	notes.delete(noteName);
-	synth.triggerRelease(noteName);
+	if (!currentNotes.has(noteName)) return;
+	currentNotes.delete(noteName);
+	if (!sustain) {
+		notes.delete(noteName);
+		synth.triggerRelease(noteName);
+	}
+	updateCandidatesFromNotes();
+}
+
+function setSustain(value) {
+	if (value) {
+		sustain = true;
+		return;
+	}
+
+	sustain = false;
+	for (const note of notes) {
+		if (!currentNotes.has(note)) {
+			notes.delete(note);
+			synth.triggerRelease(note);
+		}
+	}
 	updateCandidatesFromNotes();
 }

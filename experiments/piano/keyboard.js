@@ -54,8 +54,9 @@ function lowerOctave() {
 window.onkeydown = (e) => {
 	if (e.target.tagName === "INPUT") return;
 
-	if (e.code === "Quote") return lowerOctave();
-	if (e.code === "Backslash") return raiseOctave();
+	if (e.code === "ArrowDown") return lowerOctave();
+	if (e.code === "ArrowUp") return raiseOctave();
+	if (e.code === "Space") return setSustain(true);
 
 	const noteName = noteNameFromKeyCode(e.code, keyboardOctave);
 	if (!noteName) return;
@@ -64,6 +65,8 @@ window.onkeydown = (e) => {
 
 window.onkeyup = (e) => {
 	if (e.target.tagName === "INPUT") return;
+
+	if (e.code === "Space") return setSustain(false);
 
 	const noteName = noteNameFromKeyCode(e.code, keyboardOctave);
 	if (!noteName) return;

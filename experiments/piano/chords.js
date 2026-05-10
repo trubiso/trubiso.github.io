@@ -109,7 +109,7 @@ function nameChord(chord, octaves) {
 				for (const [highName, highOcdn, highScore] of upperCandidates) {
 					const name = `${highName}\u2060|\u2060${lowName}`;
 					const ocdn = [...lowOcdn, ...highOcdn];
-					const score = lowScore + highScore;
+					const score = lowScore + highScore - 1;
 					candidates.push([name, ocdn, score]);
 				}
 			}

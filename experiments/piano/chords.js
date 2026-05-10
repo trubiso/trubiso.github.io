@@ -110,7 +110,7 @@ function updateCandidates(candidates, notesPlaying, base) {
 	}
 
 	main.textContent = candidates[0];
-	secondary.textContent = candidates.slice(1).join("\n");
+	secondary.textContent = candidates.slice(1).join(" | ");
 }
 
 const synth = new Tone.Sampler({

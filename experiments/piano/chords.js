@@ -61,7 +61,7 @@ function nameChord(chord, octaves) {
 	}
 
 	const candidates = getChordCandidates(chord, octaves);
-	if (nameUpperStructures && chord[1] !== chord[0]) {
+	if (nameUpperStructures && chord.length > 3 && chord[1] !== chord[0]) {
 		const upperStructures = getChordCandidates(chord.slice(1), octaves.slice(1), true);
 		
 		for (const upperStructure of upperStructures) {

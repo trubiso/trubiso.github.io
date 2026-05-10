@@ -30,7 +30,7 @@ function getChordCandidates(chord, octaves, onlyRooted = false, rootless = false
 			score += penalty;
 			const chordDegrees = getDegreesAccordingToChord(transformed, degrees);
 			const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][note]);
-			const chordName = ((chord[0] === note || onlyRooted)
+			const chordName = ((chord[0] === note || onlyRooted || rootless)
 				? `${NOTES_USER[note]}${name}`
 				: `${NOTES_USER[note]}${name}/${chordDegreeNotes[0]}`)
 				+ (rootless ? " (rootless)" : "");

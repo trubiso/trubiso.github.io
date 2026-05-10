@@ -58,9 +58,9 @@ div.white-key {
 
 div.black-key {
 	position: relative;
-	margin-left: -16px;
-	margin-right: -16px;
-	width: 30px;
+	margin-left: -1vw;
+	margin-right: -1vw;
+	width: 1.8vw;
 	background-color: #333;
 	color: white;
 	height: 50%;

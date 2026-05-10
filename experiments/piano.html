@@ -26,6 +26,9 @@
 		<button onclick="help()">?</button>
 		<button onclick="Tone.start()">start audio</button>
 		<select name="device" id="device"></select>
+		<div class="gap"></div>
+		<label for="name-upper-structures">name upper structures (C/D)</label>
+		<input type="checkbox" name="name-upper-structures" id="name-upper-structures" onchange="setNameUpperStructures(this.checked);">
 	</div>
 	<div id="piano"></div>
 	<div id="sheet-music"></div>

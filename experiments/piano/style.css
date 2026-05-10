@@ -35,8 +35,14 @@ div.candidates > span#secondary-candidates {
 }
 
 div.settings {
+	display: flex;
 	padding: 5px;
 	background-color: black;
+	color: white;
+}
+
+div.settings > .gap {
+	flex-grow: 1;
 }
 
 div#piano {

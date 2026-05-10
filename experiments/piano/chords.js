@@ -12,22 +12,9 @@ function transformChord(chord, base) {
 
 const DEGREES = ["1", "b2", "2", "b3", "3", "4", "#4", "5", "b6", "6", "b7", "7"];
 
-function nameChord(chord, octaves) {
-	if (chord.length === 2) {
-		const [base, other] = transformChord(chord, chord[0]);
-		const alternative = octaves[1] > octaves[0];
-		const intervalData = intervalNames[other];
-		const [degree, name] = intervalData.length > 1
-			? intervalData[alternative ? 1 : 0]
-			: intervalData[0];
-		const chordDegrees = ["1", degree];
-		const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][base]);
-		const octavedChordDegreeNotes = chordDegreeNotes.map((x, i) => `${x}${octaves[i]}`);
-		return [[[`${NOTES_USER[chord[0]]} ${name}`]], octavedChordDegreeNotes];
-	}
-
+function getChordCandidates(chord, octaves, onlyRooted = false) {
 	const candidates = [];
-	for (const note of new Set(chord)) {
+	for (const note of onlyRooted ? [chord[0]] : new Set(chord)) {
 		const transformed = transformChord(chord, note);
 		for (const [shape, name, forbid5, degrees, penalty] of SHAPES) {
 			if (forbid5 && transformed.includes(7)) continue;
@@ -50,6 +37,42 @@ function nameChord(chord, octaves) {
 		}
 	}
 
+	return candidates;
+}
+
+let nameUpperStructures = document.getElementById("name-upper-structures").checked;
+
+function setNameUpperStructures(value) {
+	nameUpperStructures = value;
+}
+
+function nameChord(chord, octaves) {
+	if (chord.length === 2) {
+		const [base, other] = transformChord(chord, chord[0]);
+		const alternative = octaves[1] > octaves[0];
+		const intervalData = intervalNames[other];
+		const [degree, name] = intervalData.length > 1
+			? intervalData[alternative ? 1 : 0]
+			: intervalData[0];
+		const chordDegrees = ["1", degree];
+		const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][base]);
+		const octavedChordDegreeNotes = chordDegreeNotes.map((x, i) => `${x}${octaves[i]}`);
+		return [[[`${NOTES_USER[chord[0]]} ${name}`]], octavedChordDegreeNotes];
+	}
+
+	const candidates = getChordCandidates(chord, octaves);
+	if (nameUpperStructures && chord[1] !== chord[0]) {
+		const upperStructure = getChordCandidates(chord.slice(1), octaves.slice(1), true);
+		if (upperStructure.length) {
+			const name = `${upperStructure[0][0]}/${NOTES_USER[chord[0]]}`;
+			if (!candidates.some(x => x[0] === name))
+				candidates.push([
+					name,
+					[`${NOTES_USER[chord[0]]}${octaves[0]}`,...upperStructure[0][1]],
+					upperStructure[0][2] + 0.5,
+				]);
+		}
+	}
 	candidates.sort((a, b) => b[2] - a[2]);
 	return [candidates.map(([name]) => [name]), candidates[0]?.[1]];
 }

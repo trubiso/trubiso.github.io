@@ -95,7 +95,8 @@ function nameChord(chord, octaves) {
 				]);
 		}
 	}
-	if (includePolychords && chord.length > 3) {
+	if (includePolychords && chord.length >= 6) {
+		// we require the 5 for polychords for now, to avoid a trillion polychords being shown
 		for (let i = 2; i < chord.length; ++i) {
 			const [lowerChord, lowerOctaves] = [chord.slice(0, i), octaves.slice(0, i)];
 			const [upperChord, upperOctaves] = [chord.slice(i), octaves.slice(i)];

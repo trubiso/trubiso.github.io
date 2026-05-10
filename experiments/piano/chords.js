@@ -25,6 +25,8 @@ function getChordCandidates(chord, octaves, onlyRooted = false, rootless = false
 			if (!shape.every(x => transformed.includes(x))) continue;
 			if (!transformed.every(x => shape.includes(x) || x === 7)) continue;
 
+			// FIXME: this places regular chords at a disadvantage from polychords,
+			// because this only counts unique notes
 			let score = shape.filter(x => x !== 7).length;
 			if (transformed.includes(7)) score++;
 			if (!onlyRooted && chord[0] === note) score += 0.5;
@@ -104,14 +106,19 @@ function nameChord(chord, octaves) {
 			const lowerCandidates = getChordCandidates(lowerChord, lowerOctaves, false, false, true);
 			const upperCandidates = getChordCandidates(upperChord, upperOctaves, false, false, true);
 			if (!lowerCandidates.length || !upperCandidates.length) continue;
+			lowerCandidates.sort((a, b) => b[2] - a[2]);
+			upperCandidates.sort((a, b) => b[2] - a[2]);
 
+			// we break after a single iteration and just choose the best polychord for each possibility to avoid spam
 			for (const [lowName, lowOcdn, lowScore] of lowerCandidates) {
 				for (const [highName, highOcdn, highScore] of upperCandidates) {
 					const name = `${highName}\u2060|\u2060${lowName}`;
 					const ocdn = [...lowOcdn, ...highOcdn];
 					const score = lowScore + highScore - 1;
 					candidates.push([name, ocdn, score]);
+					break;
 				}
+				break;
 			}
 		}
 	}

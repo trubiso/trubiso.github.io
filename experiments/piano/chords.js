@@ -16,7 +16,7 @@ function nameChord(chord, octaves) {
 	const candidates = [];
 	for (const note of new Set(chord)) {
 		const transformed = transformChord(chord, note);
-		for (const [shape, name, forbid5, degrees] of SHAPES) {
+		for (const [shape, name, forbid5, degrees, penalty] of SHAPES) {
 			if (forbid5 && transformed.includes(7)) continue;
 			if (!shape.every(x => transformed.includes(x))) continue;
 			if (!transformed.every(x => shape.includes(x) || x === 7)) continue;
@@ -24,6 +24,7 @@ function nameChord(chord, octaves) {
 			let score = shape.filter(x => x !== 7).length;
 			if (transformed.includes(7)) score++;
 			if (chord[0] === note) score += 0.5;
+			score += penalty;
 			const chordDegrees = getDegreesAccordingToChord(transformed, degrees);
 			const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][note]);
 			const chordName = chord[0] === note

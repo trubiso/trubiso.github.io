@@ -12,12 +12,14 @@ const SHAPES_DEGREES = [
 	[["1", "5"], "5"],
 
 	// b7
+	[["1", "5", "b7"], "7(no3)"],
 	[["1", "b3", "b7"], "m7"],
 	[["1", "3", "b7"], "7"],
 	[["1", "2", "b7"], "sus9"],
 	[["1", "4", "b7"], "7sus4"],
 	[["1", "b3", "b5", "b7"], "m7b5"],
 	[["1", "3", "b5", "b7"], "7b5"],
+	[["1", "b5", "b7"], "7b5(no3)"],
 	[["1", "3", "#5", "b7"], "7#5"],
 
 	// 7
@@ -34,9 +36,10 @@ const SHAPES_DEGREES = [
 
 	// 9
 	[["1", "b3", "9"], "madd9"],
-	[["1", "3" , "9"], "add9"],
+	[["1", "3", "9"], "add9"],
 	[["1", "4", "9"], "sus4add9"],
 	[["1", "b3", "b5", "9"], "dimadd9"],
+	[["1", "3", "b5", "9"], "add9(b5)"],
 	[["1", "3", "#5", "9"], "augadd9"],
 
 	// 9, b7
@@ -251,10 +254,12 @@ const SHAPES_DEGREES = [
 
 	// 13
 	[["1", "b3", "6"], "m6"],
+	[["1", "3", "6"], "6", -1, true],
 	[["1", "3", "5", "6"], "6"],
 	[["1", "2", "5", "6"], "6sus2"],
 	[["1", "4", "5", "6"], "6sus4"],
 	[["1", "b3", "b5", "bb7"], "dim7"],
+	[["1", "3", "b5", "6"], "6(b5)"],
 
 	// 13, b7
 	[["1", "b3", "b7", "13"], "m7(13)"],
@@ -275,9 +280,9 @@ const SHAPES_DEGREES = [
 	// 13, 9
 	[["1", "b3", "6", "9"], "m6/9"],
 	[["1", "3", "6", "9"], "6/9"],
-	// [["1", "4", "6", "9"], "6/9sus4"],
+	[["1", "4", "6", "9"], "6/9sus4", -0.25],
 	[["1", "b3", "b5", "bb7", "9"], "dim6/9"],
-	// [["1", "3", "b5", "6", "9"], "6/9b5"],
+	[["1", "3", "b5", "6", "9"], "6/9b5", -0.25],
 	[["1", "4", "b5", "6", "9"], "6/9sus4b5"],
 
 	// 13, 9, b7
@@ -303,7 +308,7 @@ const SHAPES_DEGREES = [
 
 	// 13, b9, b7
 	[["1", "b3", "b7", "b9", "13"], "m7(b9, 13)"],
-	[["1", "3", "b7", "b9", "13"], "7(b9, 13)"],
+	[["1", "3", "b7", "b9", "13"], "13(b9)"],
 	[["1", "2", "b7", "b9", "13"], "sus9(b9, 13)"],
 	[["1", "4", "b7", "b9", "13"], "7sus4(b9, 13)"],
 
@@ -474,6 +479,7 @@ const SHAPES_DEGREES = [
 	// b13, 9, b7
 	[["1", "b3", "5", "b7", "9", "b13"], "m9(b13)"],
 	[["1", "3", "5", "b7", "9", "b13"], "9(b13)"],
+	[["1", "4", "b7", "9", "b13"], "sus11(b13)"],
 
 	// b13, 9, 7
 	[["1", "b3", "5", "7", "9", "b13"], "minmaj9(b13)"],
@@ -649,10 +655,14 @@ const degreeMap = {
 	"7": 11,
 }
 
-for (const [degreeShape, name] of SHAPES_DEGREES) {
+for (const shapeData of SHAPES_DEGREES) {
+	const [degreeShape, name] = shapeData;
+	const penalty = shapeData.length > 2 ? shapeData[2] : 0;
 	const shape = degreeShape.map(x => degreeMap[x]);
-	const forbid5 = degreeShape.includes("b5") || degreeShape.includes("#5");
-	SHAPES.push([shape, name, forbid5, degreeShape]);
+	const forbid5 = (shapeData.length > 3)
+		? shapeData[3]
+		: (degreeShape.includes("b5") || degreeShape.includes("#5"));
+	SHAPES.push([shape, name, forbid5, degreeShape, penalty]);
 }
 
 function getDegreeAccordingToChord(note, shape) {

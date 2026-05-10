@@ -41,7 +41,7 @@ function noteNameFromKeyCode(code, octave) {
 	}
 }
 
-let keyboardOctave = 4;
+let keyboardOctave = 3;
 
 function raiseOctave() {
 	if (keyboardOctave < 6) keyboardOctave++;

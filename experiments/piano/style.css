@@ -39,10 +39,15 @@ div.settings {
 	padding: 5px;
 	background-color: black;
 	color: white;
+	gap: 5px;
 }
 
 div.settings > .gap {
 	flex-grow: 1;
+}
+
+div.settings > .option {
+	display: flex;
 }
 
 div#piano {

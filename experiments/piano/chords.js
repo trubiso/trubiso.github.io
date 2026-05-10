@@ -12,11 +12,14 @@ function transformChord(chord, base) {
 
 const DEGREES = ["1", "b2", "2", "b3", "3", "4", "#4", "5", "b6", "6", "b7", "7"];
 
-function getChordCandidates(chord, octaves, onlyRooted = false) {
+function getChordCandidates(chord, octaves, onlyRooted = false, rootless = false) {
 	const candidates = [];
-	for (const note of new Set(chord)) {
+	const chordTones = new Set(chord);
+	for (const note of rootless ? NOTES.map((x, i) => i).filter(x => !chordTones.has(x)) : chordTones) {
 		const transformed = transformChord(chord, note);
-		for (const [shape, name, forbid5, degrees, penalty] of SHAPES) {
+		for (const [rawShape, name, forbid5, rawDegrees, penalty] of SHAPES) {
+			const shape = rootless ? rawShape.filter(x => x !== 0) : rawShape;
+			const degrees = rootless ? rawDegrees.filter(x => x !== "1") : rawDegrees;
 			if (forbid5 && transformed.includes(7)) continue;
 			if (!shape.every(x => transformed.includes(x))) continue;
 			if (!transformed.every(x => shape.includes(x) || x === 7)) continue;
@@ -27,9 +30,10 @@ function getChordCandidates(chord, octaves, onlyRooted = false) {
 			score += penalty;
 			const chordDegrees = getDegreesAccordingToChord(transformed, degrees);
 			const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][note]);
-			const chordName = (chord[0] === note || onlyRooted)
+			const chordName = ((chord[0] === note || onlyRooted)
 				? `${NOTES_USER[note]}${name}`
-				: `${NOTES_USER[note]}${name}/${chordDegreeNotes[0]}`;
+				: `${NOTES_USER[note]}${name}/${chordDegreeNotes[0]}`)
+				+ (rootless ? " (rootless)" : "");
 
 			const octavedChordDegreeNotes = chordDegreeNotes.map((x, i) => `${x}${octaves[i]}`);
 
@@ -41,12 +45,19 @@ function getChordCandidates(chord, octaves, onlyRooted = false) {
 }
 
 let nameUpperStructures = document.getElementById("name-upper-structures").checked;
+let includeRootless = document.getElementById("include-rootless").checked;
 
 function setNameUpperStructures(value) {
 	nameUpperStructures = value;
 }
 
+function setIncludeRootless(value) {
+	includeRootless = value;
+}
+
 function nameChord(chord, octaves) {
+	if (chord.length === 1) return [[], null];
+
 	if (chord.length === 2) {
 		const [base, other] = transformChord(chord, chord[0]);
 		const alternative = octaves[1] > octaves[0];
@@ -62,6 +73,7 @@ function nameChord(chord, octaves) {
 	}
 
 	const candidates = getChordCandidates(chord, octaves);
+	if (includeRootless) candidates.push(...getChordCandidates(chord, octaves, false, true));
 	if (nameUpperStructures && chord.length > 3 && chord[1] !== chord[0]) {
 		const upperStructures = getChordCandidates(chord.slice(1), octaves.slice(1), true);
 		

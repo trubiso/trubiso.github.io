@@ -23,7 +23,7 @@ function getChordCandidates(chord, octaves, onlyRooted = false) {
 
 			let score = shape.filter(x => x !== 7).length;
 			if (transformed.includes(7)) score++;
-			if (chord[0] === note) score += 0.5;
+			if (!onlyRooted && chord[0] === note) score += 0.5;
 			score += penalty;
 			const chordDegrees = getDegreesAccordingToChord(transformed, degrees);
 			const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][note]);
@@ -66,12 +66,13 @@ function nameChord(chord, octaves) {
 		
 		for (const upperStructure of upperStructures) {
 			if (upperStructure[0].startsWith(NOTES_USER[chord[0]])) continue;
+			// FIXME: sometimes this creates duplicates like F#/Bb vs F#/A#. we need a way to stop that
 			const name = `${upperStructure[0]}/${NOTES_USER[chord[0]]}`;
 			if (!candidates.some(x => x[0] === name))
 				candidates.push([
 					name,
 					[`${NOTES_USER[chord[0]]}${octaves[0]}`,...upperStructure[1]],
-					upperStructure[2] + 0.5,
+					upperStructure[2],
 				]);
 		}
 	}

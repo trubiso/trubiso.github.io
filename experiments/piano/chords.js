@@ -55,8 +55,9 @@ function nameChord(chord, octaves) {
 			? intervalData[alternative ? 1 : 0]
 			: intervalData[0];
 		const chordDegrees = ["1", degree];
-		const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][base]);
+		const chordDegreeNotes = chordDegrees.map(x => degreeNameMap[x][chord[0]]);
 		const octavedChordDegreeNotes = chordDegreeNotes.map((x, i) => `${x}${octaves[i]}`);
+		// FIXME: sometimes the octaves are silly
 		return [[[`${NOTES_USER[chord[0]]} ${name}`]], octavedChordDegreeNotes];
 	}
 

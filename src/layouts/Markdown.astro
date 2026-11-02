@@ -1,0 +1,109 @@
+---
+import TableOfContents from "../components/TableOfContents.astro";
+import BaseLayout from "./BaseLayout.astro";
+import { GlobeX } from "@lucide/astro";
+import { translations } from "../i18n";
+
+const locale = Astro.currentLocale ?? "en";
+const t = translations[locale as keyof typeof translations];
+
+const { frontmatter, headings, isLocalized } = Astro.props;
+const { title, published, edited } = frontmatter;
+
+const dateFormat: Intl.DateTimeFormatOptions = {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+};
+
+let dateString = published.toLocaleDateString(undefined, dateFormat);
+
+if (typeof edited !== "undefined") {
+  dateString += ` (edited ${edited.toLocaleDateString(undefined, dateFormat)})`;
+}
+
+const warning = t.missingLocale;
+---
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex.min.css"
+  integrity="sha384-WcoG4HRXMzYzfCgiyfrySxx90XSl2rxY5mnVY5TwtWE6KLrArNKn0T/mOgNL0Mmi"
+  crossorigin="anonymous"
+/>
+
+<script
+  defer
+  src="https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex.min.js"
+  integrity="sha384-J+9dG2KMoiR9hqcFao0IBLwxt6zpcyN68IgwzsCSkbreXUjmNVRhPFTssqdSGjwQ"
+  crossorigin="anonymous"></script>
+
+<BaseLayout title={title}>
+  <main>
+    <header class="post-header">
+      <nav>
+        <a href="/blog" class="go-back">
+          &LongLeftArrow;&nbsp;&nbsp;Back to Blog
+        </a>
+      </nav>
+      <span>{dateString}</span>
+    </header>
+
+    <h1>{title}</h1>
+
+    {
+      !isLocalized && (
+        <aside class="translation-warning" role="note">
+          <GlobeX size={20} />
+          <p>{warning}</p>
+        </aside>
+      )
+    }
+
+    <TableOfContents headings={headings} />
+    <slot />
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  header.post-header {
+    display: flex;
+
+    > * {
+      flex-grow: 1;
+    }
+
+    > span {
+      opacity: 50%;
+      text-align: right;
+    }
+  }
+
+  .go-back {
+    text-decoration: none;
+  }
+
+  .translation-warning {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    padding: 0.85rem 1rem;
+    margin: 1.5rem 0;
+
+    background: var(--card-bg);
+    color: var(--card-fg);
+    border-left: 3px solid var(--base-link-hover);
+
+    svg {
+      flex-shrink: 0;
+      color: var(--base-link-hover);
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+  }
+</style>

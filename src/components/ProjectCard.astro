@@ -1,0 +1,138 @@
+---
+import { translations } from "../i18n";
+
+const locale = Astro.currentLocale ?? "en";
+const t = translations[locale as keyof typeof translations].projectCard;
+
+type Props = {
+  name: string;
+  description: string;
+  image: string;
+  startTime: string;
+  endTime?: string;
+  technologies: readonly string[];
+  url?: string;
+};
+
+const { name, description, image, startTime, endTime, technologies, url } =
+  Astro.props;
+
+const years = `${startTime} – ${endTime ?? t.present}`;
+---
+
+<article class="project">
+  <div class="cover" style={`background-image: url("${image}")`}>
+    <div class="cover-content">
+      <h2>{name}</h2>
+    </div>
+  </div>
+
+  <div class="content">
+    <p class="description">{description}</p>
+
+    <div class="footer">
+      <span class="years">{years}</span>
+
+      <div class="technologies">
+        {
+          technologies.map((technology) => (
+            <span class="technology">{technology}</span>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+
+  {
+    url && (
+      <a class="project-link" href={url} target="_blank">
+        {t.viewProject} ↗
+      </a>
+    )
+  }
+</article>
+
+<style lang="scss">
+  .project {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+
+    overflow: hidden;
+    border-radius: 3px;
+
+    background: var(--card-bg);
+    color: var(--card-fg);
+
+    .cover {
+      position: relative;
+      height: 190px;
+      background-size: cover;
+      background-position: center;
+
+      .cover-content {
+        position: absolute;
+        inset: auto 20px 16px;
+
+        h2 {
+          margin: 8px 0 0;
+          font-size: 1.7rem;
+          color: #fff;
+        }
+      }
+    }
+
+    .content {
+      padding: 16px;
+
+      .description {
+        margin: 0;
+        line-height: 1.5;
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      .footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .years {
+        font-size: 0.8rem;
+        opacity: 0.65;
+        white-space: nowrap;
+      }
+
+      .technologies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .technology {
+        padding: 4px 8px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--card-fg) 10%, transparent);
+        font-size: 0.7rem;
+      }
+    }
+
+    .project-link {
+      padding: 0 16px 16px;
+      color: inherit;
+      font-size: 0.85rem;
+      text-decoration: none;
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+</style>

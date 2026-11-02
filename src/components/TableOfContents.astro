@@ -1,0 +1,96 @@
+---
+import type { MarkdownHeading } from "astro";
+import TOCElement from "./TOCElement.astro";
+
+export interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+
+export interface NestedHeading {
+  text: string;
+  slug: string;
+  children: NestedHeading[];
+}
+
+const nestedHeadings: NestedHeading[] = [];
+for (const { text, slug, depth } of headings) {
+  const actualText = text.slice(1);
+  if (depth < 2) continue; // omit title
+  if (depth == 2) {
+    nestedHeadings.push({ text: actualText, slug, children: [] });
+    continue;
+  }
+  if (depth > 2) {
+    let steps = depth - 2;
+    let last = { children: nestedHeadings } as NestedHeading;
+    while (steps--) {
+      const lastChild = last.children[last.children.length - 1];
+      if (typeof lastChild === "undefined") {
+        throw "error: forward-skip in heading depth";
+      }
+      last = lastChild;
+    }
+    last.children.push({ text: actualText, slug, children: [] });
+  }
+}
+---
+
+<nav id="toc">
+  <h2>Table of Contents</h2>
+  <ol class="toc-ol">
+    {nestedHeadings.map((heading) => <TOCElement heading={heading} />)}
+  </ol>
+</nav>
+
+<style lang="scss" is:global>
+  ol.toc-ol {
+    counter-reset: item;
+    li {
+      position: relative;
+      display: block;
+      margin-right: 0.5em;
+      &::before {
+        position: absolute;
+        right: calc(100% + 0.5em);
+        content: counters(item, ".") ". ";
+        counter-increment: item;
+      }
+    }
+
+    * {
+      color: var(--card-fg);
+      a {
+        text-decoration: none;
+        color: var(--card-link-base);
+        &:hover {
+          color: var(--card-link-hover);
+        }
+      }
+    }
+  }
+
+  nav#toc {
+    background-color: var(--card-bg);
+    padding: 2rem 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0.5rem 1rem var(--base-bg) inset;
+
+    h2 {
+      margin: 0;
+      margin-bottom: 20px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    > ol.toc-ol {
+      margin: 0;
+      margin-left: 0.5em;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0rem 3rem 1rem;
+    }
+  }
+</style>

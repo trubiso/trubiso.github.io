@@ -1,0 +1,388 @@
+---
+export interface Props {
+  A: number[][];
+  b: number[];
+  c: number[];
+  isocost?: boolean;
+  xMax?: number;
+  yMax?: number;
+}
+
+const { A, b, c, isocost, xMax, yMax } = Astro.props;
+// TODO: theme this
+---
+
+<div
+  class="lp-graph"
+  data-a={JSON.stringify(A)}
+  data-b={JSON.stringify(b)}
+  data-c={JSON.stringify(c)}
+  data-isocost={isocost}
+  data-xmax={xMax}
+  data-ymax={yMax}
+  style="width: 100%; height: 520px;"
+>
+</div>
+
+<script>
+  import Plotly, { type Data, type Layout } from "plotly.js-dist-min";
+
+  type Point = [number, number];
+
+  const EPSILON = 1e-9;
+
+  function unique(points: Point[]): Point[] {
+    return points.filter(
+      (p, i) =>
+        points.findIndex(
+          (q) =>
+            Math.abs(p[0] - q[0]) < EPSILON && Math.abs(p[1] - q[1]) < EPSILON,
+        ) === i,
+    );
+  }
+
+  function clip(polygon: Point[], a: number, b: number, rhs: number): Point[] {
+    if (polygon.length === 0) return [];
+
+    const result: Point[] = [];
+
+    const inside = (p: Point) => a * p[0] + b * p[1] <= rhs + EPSILON;
+
+    for (let i = 0; i < polygon.length; i++) {
+      const current = polygon[i];
+      const next = polygon[(i + 1) % polygon.length];
+
+      const currentInside = inside(current);
+      const nextInside = inside(next);
+
+      if (currentInside && nextInside) {
+        result.push(next);
+      } else if (currentInside && !nextInside) {
+        const dx = next[0] - current[0];
+        const dy = next[1] - current[1];
+
+        const t = (rhs - a * current[0] - b * current[1]) / (a * dx + b * dy);
+
+        result.push([current[0] + t * dx, current[1] + t * dy]);
+      } else if (!currentInside && nextInside) {
+        const dx = next[0] - current[0];
+        const dy = next[1] - current[1];
+
+        const t = (rhs - a * current[0] - b * current[1]) / (a * dx + b * dy);
+
+        result.push([current[0] + t * dx, current[1] + t * dy]);
+
+        result.push(next);
+      }
+    }
+
+    return unique(result);
+  }
+
+  function area(polygon: Point[]): number {
+    let result = 0;
+
+    for (let i = 0; i < polygon.length; i++) {
+      const p = polygon[i];
+      const q = polygon[(i + 1) % polygon.length];
+
+      result += p[0] * q[1] - q[0] * p[1];
+    }
+
+    return Math.abs(result) / 2;
+  }
+
+  function isUnbounded(A: number[][]): boolean {
+    let lo = 0;
+    let hi = 1;
+
+    for (const [a, b] of A) {
+      // a*t + b*(1-t) <= 0
+      // (a-b)*t <= -b
+      const slope = a - b;
+
+      if (Math.abs(slope) < EPSILON) {
+        if (b > EPSILON) return false;
+        continue;
+      }
+
+      const bound = -b / slope;
+
+      if (slope > 0) {
+        hi = Math.min(hi, bound);
+      } else {
+        lo = Math.max(lo, bound);
+      }
+
+      if (lo > hi + EPSILON) return false;
+    }
+
+    return lo <= hi + EPSILON;
+  }
+
+  function lineInViewport(
+    a: number,
+    b: number,
+    rhs: number,
+    xmax: number,
+    ymax: number,
+  ): Point[] {
+    const points: Point[] = [];
+
+    if (Math.abs(b) > EPSILON) {
+      const y0 = rhs / b;
+      const y1 = (rhs - a * xmax) / b;
+
+      if (y0 >= -EPSILON && y0 <= ymax + EPSILON) points.push([0, y0]);
+
+      if (y1 >= -EPSILON && y1 <= ymax + EPSILON) points.push([xmax, y1]);
+    }
+
+    if (Math.abs(a) > EPSILON) {
+      const x0 = rhs / a;
+      const x1 = (rhs - b * ymax) / a;
+
+      if (x0 >= -EPSILON && x0 <= xmax + EPSILON) points.push([x0, 0]);
+
+      if (x1 >= -EPSILON && x1 <= xmax + EPSILON) points.push([x1, ymax]);
+    }
+
+    return unique(points);
+  }
+
+  function autoBounds(A: number[][], b: number[]) {
+    const xs: number[] = [];
+    const ys: number[] = [];
+
+    // Positive axis intercepts.
+    for (let i = 0; i < A.length; i++) {
+      const [a, coeffB] = A[i];
+
+      if (a > EPSILON) {
+        const x = b[i] / a;
+        if (x > 0 && Number.isFinite(x)) xs.push(x);
+      }
+
+      if (coeffB > EPSILON) {
+        const y = b[i] / coeffB;
+        if (y > 0 && Number.isFinite(y)) ys.push(y);
+      }
+    }
+
+    // Positive pairwise intersections.
+    for (let i = 0; i < A.length; i++) {
+      for (let j = i + 1; j < A.length; j++) {
+        const [a1, b1] = A[i];
+        const [a2, b2] = A[j];
+
+        const det = a1 * b2 - a2 * b1;
+
+        if (Math.abs(det) < EPSILON) continue;
+
+        const x = (b[i] * b2 - b[j] * b1) / det;
+        const y = (a1 * b[j] - a2 * b[i]) / det;
+
+        if (Number.isFinite(x) && x > 0) xs.push(x);
+        if (Number.isFinite(y) && y > 0) ys.push(y);
+      }
+    }
+
+    return {
+      x: Math.max(...xs),
+      y: Math.max(...ys),
+    };
+  }
+
+  document.querySelectorAll<HTMLDivElement>(".lp-graph").forEach((graph) => {
+    const A: number[][] = JSON.parse(graph.dataset.a ?? "[]");
+    const b: number[] = JSON.parse(graph.dataset.b ?? "[]");
+    const c: number[] = JSON.parse(graph.dataset.c ?? "[]");
+    const isocost = graph.dataset.isocost;
+
+    if (
+      A.length !== b.length ||
+      A.some((row) => row.length !== 2) ||
+      c.length !== 2 ||
+      [...A.flat(), ...b, ...c].some((v) => !Number.isFinite(v))
+    ) {
+      graph.textContent = "invalid problem";
+      return;
+    }
+
+    const automatic = autoBounds(A, b);
+
+    const xmax = Number(graph.dataset.xmax) || automatic.x;
+    const ymax = Number(graph.dataset.ymax) || automatic.y;
+
+    if (
+      !Number.isFinite(xmax) ||
+      !Number.isFinite(ymax) ||
+      xmax <= 0 ||
+      ymax <= 0
+    ) {
+      graph.textContent = "invalid bounds";
+      return;
+    }
+
+    let polygon: Point[] = [
+      [0, 0],
+      [xmax, 0],
+      [xmax, ymax],
+      [0, ymax],
+    ];
+
+    for (let i = 0; i < A.length; i++) {
+      polygon = clip(polygon, A[i][0], A[i][1], b[i]);
+    }
+
+    const vertices = unique(polygon);
+    const feasible = vertices.length > 0;
+    const bounded = feasible && !isUnbounded(A);
+
+    const traces: Data[] = [];
+
+    // constraints
+    for (let i = 0; i < A.length; i++) {
+      const points = lineInViewport(A[i][0], A[i][1], b[i], xmax, ymax);
+
+      if (points.length < 2) continue;
+
+      traces.push({
+        x: [points[0][0], points[1][0]],
+        y: [points[0][1], points[1][1]],
+        type: "scatter",
+        mode: "lines",
+        line: {
+          color: ["#1147cd", "#ffc600", "#e879f9", "#06b6d4"][i % 4],
+          width: 2,
+        },
+        name: `${A[i][0]}x1 + ${A[i][1]}x2 ≤ ${b[i]}`,
+      });
+    }
+
+    // feasible region
+    if (feasible) {
+      traces.push({
+        x: [...vertices.map((p) => p[0]), vertices[0][0]],
+        y: [...vertices.map((p) => p[1]), vertices[0][1]],
+        type: "scatter",
+        mode: area(vertices) > EPSILON ? "lines" : "markers",
+        fill: area(vertices) > EPSILON ? "toself" : undefined,
+        fillcolor: "rgba(34, 197, 94, 0.18)",
+        line: { color: "green", width: 2 },
+        marker: { color: "green", size: 8 },
+        name: bounded ? "Feasible region" : "Feasible region (clipped)",
+      });
+
+      // vertices of the visible feasible region
+      traces.push({
+        x: vertices.map((p) => p[0]),
+        y: vertices.map((p) => p[1]),
+        type: "scatter",
+        mode: "markers",
+        marker: {
+          color: "red",
+          size: 8,
+          symbol: "square",
+        },
+        name: "Vertices",
+      });
+    }
+
+    // isocost lines only when the feasible region is bounded
+    if (
+      isocost &&
+      feasible &&
+      bounded &&
+      Math.abs(c[0]) + Math.abs(c[1]) > EPSILON
+    ) {
+      for (const vertex of vertices) {
+        const z = c[0] * vertex[0] + c[1] * vertex[1];
+
+        const points: Point[] = [];
+
+        if (Math.abs(c[1]) > EPSILON) {
+          const y0 = z / c[1];
+          const y1 = (z - c[0] * xmax) / c[1];
+
+          if (y0 >= -EPSILON && y0 <= ymax + EPSILON) points.push([0, y0]);
+
+          if (y1 >= -EPSILON && y1 <= ymax + EPSILON) points.push([xmax, y1]);
+        }
+
+        if (Math.abs(c[0]) > EPSILON) {
+          const x0 = z / c[0];
+          const x1 = (z - c[1] * ymax) / c[0];
+
+          if (x0 >= -EPSILON && x0 <= xmax + EPSILON) points.push([x0, 0]);
+
+          if (x1 >= -EPSILON && x1 <= xmax + EPSILON) points.push([x1, ymax]);
+        }
+
+        const line = unique(points);
+
+        if (line.length < 2) continue;
+
+        traces.push({
+          x: [line[0][0], line[1][0]],
+          y: [line[0][1], line[1][1]],
+          type: "scatter",
+          mode: "lines",
+          line: {
+            color: "rgba(180, 180, 180, 0.65)",
+            width: 1.5,
+            dash: "dot",
+          },
+          name: `Isocost z = ${z}`,
+        });
+      }
+    }
+
+    // z arrow
+    const magnitude = Math.hypot(c[0], c[1]);
+    const scale = Math.min(xmax, ymax) * 0.15;
+
+    const layout: Partial<Layout> = {
+      paper_bgcolor: "#222",
+      plot_bgcolor: "#222",
+      font: { color: "#fff" },
+      title: { text: "Feasible region" },
+      xaxis: {
+        title: { text: "x1" },
+        color: "#fff",
+        gridcolor: "rgba(255, 255, 255, 0.5)",
+        range: [-1, xmax + 1],
+        zeroline: true,
+      },
+      yaxis: {
+        title: { text: "x2" },
+        color: "#fff",
+        gridcolor: "rgba(255, 255, 255, 0.5)",
+        range: [-1, ymax + 1],
+        zeroline: true,
+      },
+      showlegend: true,
+      margin: { t: 60, r: 10, b: 90, l: 70 },
+      hovermode: "closest",
+      annotations: [
+        {
+          x: (c[0] / magnitude) * scale,
+          y: (c[1] / magnitude) * scale,
+          ax: 0,
+          ay: 0,
+          xref: "x",
+          yref: "y",
+          axref: "x",
+          ayref: "y",
+          showarrow: true,
+          arrowhead: 3,
+          arrowsize: 1.5,
+          arrowwidth: 2,
+          arrowcolor: "gray",
+        },
+      ],
+    };
+
+    Plotly.newPlot(graph, traces, layout, { responsive: true });
+  });
+</script>

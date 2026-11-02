@@ -1,0 +1,38 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="trubiso">
+  <section class="hero">
+    <h1 class="trubiso">trubiso</h1>
+  </section>
+</BaseLayout>
+
+<style lang="scss">
+  @use "../styles/global";
+
+  .hero {
+    height: calc(100vh - global.$nav-height - global.$footer-height);
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    h1.trubiso {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: -1;
+
+      margin: 0;
+
+      user-select: none;
+      font-family: global.$font-mono;
+      font-size: 7rem;
+      @media screen and (max-width: 49rem) {
+        font-size: 14.3vw;
+      }
+    }
+  }
+</style>

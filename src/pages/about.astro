@@ -1,0 +1,62 @@
+---
+import AboutInterest from "@components/AboutInterest.astro";
+import BaseLayout from "@layouts/BaseLayout.astro";
+import ProjectCard from "@components/ProjectCard.astro";
+import { translations } from "../i18n";
+
+const locale = Astro.currentLocale ?? "en";
+const t = translations[locale as keyof typeof translations].about;
+---
+
+<BaseLayout title="About">
+  <main>
+    <h1>{t.title}</h1>
+
+    <p>{t.interestsTitle}</p>
+
+    <div id="physics-world">
+      {t.interests.map((props) => <AboutInterest {...props} />)}
+    </div>
+
+    <p>{t.projectsTitle}</p>
+
+    <div class="projects">
+      {t.projects.map((props) => <ProjectCard {...props} />)}
+    </div>
+
+    <p>{t.socialsTitle}</p>
+
+    <ul>
+      <li>GitHub: <a href="https://github.com/trubiso">trubiso</a></li>
+      <li>Twitch: <a href="https://www.twitch.tv/trubiso">trubiso</a></li>
+      <li>Discord: trubiso</li>
+      <li>Newgrounds: <a href="https://trubiso.newgrounds.com/">trubiso</a></li>
+    </ul>
+
+    <p>{t.signoff}</p>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  #physics-world {
+    position: relative;
+    height: 1000px;
+    overflow: hidden;
+    border: 1px solid var(--base-fg);
+    border-radius: 5px;
+  }
+
+  .projects {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+</style>
+
+<script>
+  import { initializePhysics } from "../scripts/physics";
+
+  const container = document.querySelector<HTMLElement>("#physics-world")!;
+
+  initializePhysics(container);
+</script>

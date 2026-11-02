@@ -1,0 +1,66 @@
+---
+import NavbarLanguageSwitcher from "./NavbarLanguageSwitcher.astro";
+import NavbarThemeSwitcher from "./NavbarThemeSwitcher.astro";
+import NavbarLink from "./NavbarLink.astro";
+import { translations } from "../i18n";
+
+const locale = Astro.currentLocale ?? "en";
+const t = translations[locale as keyof typeof translations].nav;
+---
+
+<nav class="navbar">
+  <NavbarLink href="/" name={t.home} />
+  <!-- <NavbarLink href="/blog" name={t.blog} /> -->
+  <NavbarLink href="/experiments" name={t.experiments} />
+  <NavbarLink href="/about" name={t.about} />
+  <NavbarThemeSwitcher />
+  <NavbarLanguageSwitcher />
+</nav>
+
+<style lang="scss" is:global>
+  @use "../styles/global";
+
+  nav.navbar {
+    display: flex;
+    justify-content: right;
+    gap: 10px;
+
+    width: 100%;
+    height: global.$nav-height;
+    padding-right: 30px;
+
+    background-color: var(--nav-bg);
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      min-width: 80px;
+      height: 100%;
+      padding: 20px;
+
+      text-decoration: none;
+      background-color: var(--nav-item-base);
+      color: var(--nav-item-hover);
+
+      &[aria-current="page"],
+      &:hover {
+        background-color: var(--nav-selected-base);
+        color: var(--nav-selected-hover);
+      }
+
+      &[aria-current="page"] {
+        cursor: default;
+      }
+    }
+
+    .language-picker {
+      min-width: 60px;
+      max-width: 60px;
+      svg {
+        fill: var(--nav-fg);
+      }
+    }
+  }
+</style>

@@ -1,0 +1,32 @@
+---
+import "@styles/base.scss";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import { generateThemeCSS } from "../theme";
+
+const { title } = Astro.props;
+const themeCSS = generateThemeCSS();
+---
+
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <script is:inline>
+      const savedTheme = localStorage.getItem("theme");
+
+      if (savedTheme === "light" || savedTheme === "dark") {
+        document.documentElement.dataset.theme = savedTheme;
+      }
+    </script>
+    <style is:inline set:html={themeCSS}></style>
+  </head>
+  <body>
+    <Header />
+    <slot />
+    <Footer />
+  </body>
+</html>

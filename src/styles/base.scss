@@ -1,0 +1,199 @@
+@use "global";
+
+html {
+  background-color: var(--base-bg);
+  color: var(--base-fg);
+  font-family: global.$font-sans-p;
+  scroll-behavior: smooth;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
+  align-items: center;
+}
+
+section,
+main {
+  width: 100%;
+  max-width: 80ch;
+  padding: 2rem;
+  line-height: 1.5;
+}
+
+header,
+footer {
+  width: 100%;
+}
+
+a {
+  color: var(--base-link-base);
+  transition: color 0.05s ease;
+  text-decoration: solid underline 1px;
+
+  &.external-link {
+    &::after {
+      display: inline-block;
+      content: "";
+      mask-image: url("/open.svg");
+      mask-size: 0.75em 0.75em;
+      background-color: var(--base-link-base);
+      width: 0.75em;
+      height: 0.75em;
+      vertical-align: top;
+    }
+  }
+
+  &:hover {
+    color: var(--base-link-hover);
+    &::after {
+      background-color: var(--base-link-hover);
+    }
+  }
+}
+
+p,
+li {
+  text-align: justify;
+}
+
+hr {
+  border: none;
+  margin: 30px 0px;
+  &::before {
+    content: "";
+    position: absolute;
+    left: 5vw;
+    height: 0%;
+    width: 90vw;
+    border: 0.015em solid var(--base-fg);
+    border-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--hr) 20%,
+        var(--hr) 80%,
+        transparent 100%
+      )
+      1;
+    opacity: 50%;
+  }
+}
+
+pre,
+pre *,
+code,
+code * {
+  font-family: global.$font-mono;
+}
+
+code:not(pre > code) {
+  font-family: global.$font-mono;
+  padding: 0.0625em 0.25em;
+  border-radius: 0.25em;
+  background-color: var(--code-bg);
+  color: var(--code-fg);
+}
+
+pre {
+  position: relative;
+  border: 0.125em solid var(--code-border);
+  border-radius: 0.25em;
+  padding: 0.5em;
+  width: 100%;
+
+  /*
+	&::after {
+		transition: opacity 0.20s ease;
+		opacity: 0%;
+		content: attr(data-language);
+		position: absolute;
+		top: 0;
+		right: 1em;
+		padding: .25em;
+		margin-top: -.125em;
+		border-radius: 0 0 .5em .5em;
+		font-size: 0.85em;
+		background: linear-gradient(
+			180deg,
+			var(--code-lang-bg) 0%,
+			color.scale(var(--code-lang-bg), $alpha: -70%) 100%,
+		);
+		color: var(--code-lang-fg);
+	}
+
+	&:hover::after {
+		opacity: 100%;
+	}
+	*/
+}
+
+blockquote {
+  color: var(--quote-fg);
+  border-left: 0.125em solid var(--quote-fg);
+  border-image: linear-gradient(
+      0deg,
+      transparent 0%,
+      var(--quote-line) 0.5em,
+      var(--quote-line) calc(100% - 0.5em),
+      transparent 100%
+    )
+    1;
+  margin: 0;
+  padding-left: 20px;
+}
+
+h1:not(.trubiso) {
+  font-family: global.$font-sans-h1;
+  text-align: center;
+  font-size: 4em;
+  font-weight: 900;
+}
+
+h2 {
+  font-size: 2em;
+}
+
+h3 {
+  font-size: 1.5em;
+}
+
+h4 {
+  font-size: 1.25em;
+}
+
+h5 {
+  font-size: 1.125em;
+}
+
+h2,
+h3,
+h4,
+h5 {
+  font-family: global.$font-sans-h;
+  position: relative;
+  display: flex;
+}
+
+.anchor {
+  position: relative;
+  .anchor-link {
+    position: absolute;
+    right: calc(100% + 1rem);
+    text-decoration: none;
+    text-align: right;
+
+    transition: color 0.1s ease;
+    color: var(--anchor-link-base);
+
+    &:hover {
+      color: var(--anchor-link-hover);
+    }
+  }
+}
+
+* {
+  box-sizing: border-box;
+}

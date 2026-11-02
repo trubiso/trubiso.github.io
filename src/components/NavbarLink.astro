@@ -1,0 +1,31 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+
+export interface Props {
+  href: string;
+  name: string;
+}
+
+const { href, name } = Astro.props;
+const { pathname } = Astro.url;
+
+const locale = Astro.currentLocale ?? "en";
+
+const localizedHref = getRelativeLocaleUrl(
+  locale,
+  href === "/" ? "" : href.replace(/^\//, ""),
+);
+
+const normalizePath = (path: string) =>
+  path.replace(/^\/([a-z]{2})(?=\/|$)/, "").replace(/\/+$/, "") || "/";
+
+const isCurrent = normalizePath(pathname) === normalizePath(href);
+---
+
+<a
+  class="nav-item"
+  href={localizedHref}
+  aria-current={isCurrent ? "page" : undefined}
+>
+  {name}
+</a>

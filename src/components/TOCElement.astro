@@ -1,0 +1,17 @@
+---
+import type { NestedHeading } from "./TableOfContents.astro";
+
+interface Props {
+  heading: NestedHeading;
+}
+
+const { heading } = Astro.props;
+const { text, slug, children } = heading;
+---
+
+<li>
+  <a href=`#${slug}`>{text}</a>
+  <ol class="toc-ol">
+    {children && children.map((heading) => <Astro.self heading={heading} />)}
+  </ol>
+</li>

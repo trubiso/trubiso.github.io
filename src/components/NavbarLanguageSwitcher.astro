@@ -1,0 +1,150 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { ChevronDown, Globe } from "@lucide/astro";
+
+const languages = [
+  { code: "en", name: "English" },
+  { code: "es", name: "Español" },
+];
+
+const currentLocale = Astro.currentLocale ?? "en";
+
+const currentPath = Astro.url.pathname
+  .replace(/^\/es(?=\/|$)/, "")
+  .replace(/^\/+/, "")
+  .replace(/\/$/, "");
+
+const getLanguageUrl = (locale: string) =>
+  getRelativeLocaleUrl(locale, currentPath);
+---
+
+<div class="language-picker">
+  <button
+    class="nav-item language-trigger"
+    aria-expanded="false"
+    aria-haspopup="true"
+    aria-label="Select language"
+  >
+    <Globe size={18} fill-opacity={0} />
+    <span>{currentLocale.toUpperCase()}</span>
+    <ChevronDown class="arrow" size={14} />
+  </button>
+
+  <div class="language-dropdown">
+    {
+      languages.map((language) => (
+        <a
+          href={getLanguageUrl(language.code)}
+          aria-current={currentLocale === language.code ? "page" : undefined}
+          class:list={{ active: currentLocale === language.code }}
+        >
+          {language.name}
+        </a>
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".language-picker").forEach((picker) => {
+    const button = picker.querySelector(".language-trigger");
+    const dropdown = picker.querySelector(".language-dropdown");
+
+    if (!button || !dropdown) return;
+
+    const close = () => {
+      button.setAttribute("aria-expanded", "false");
+      dropdown.classList.remove("open");
+    };
+
+    button.addEventListener("click", () => {
+      const isOpen = button.getAttribute("aria-expanded") === "true";
+
+      button.setAttribute("aria-expanded", String(!isOpen));
+      dropdown.classList.toggle("open", !isOpen);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!picker.contains(event.target as Node)) close();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        close();
+        button.focus();
+      }
+    });
+  });
+</script>
+
+<style lang="scss">
+  .language-picker {
+    position: relative;
+    height: 100%;
+  }
+
+  .language-trigger {
+    width: 80px;
+    min-width: 80px !important;
+    height: 100%;
+    padding: 10px;
+    gap: 6px;
+
+    background: transparent;
+    border: none;
+    font: inherit;
+    cursor: pointer;
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    .arrow {
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+
+    &[aria-expanded="true"] {
+      color: var(--nav-selected-hover);
+      background: var(--nav-selected-base);
+
+      .arrow {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  .language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: -20px;
+
+    min-width: 130px;
+    padding: 0;
+
+    background: var(--nav-bg);
+    display: none;
+    z-index: 100;
+
+    &.open {
+      display: block;
+    }
+
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+
+      padding: 12px 15px;
+
+      color: var(--nav-fg);
+      text-decoration: none;
+
+      &:hover,
+      &.active {
+        background: var(--nav-selected-base);
+        color: var(--nav-selected-hover);
+      }
+    }
+  }
+</style>
